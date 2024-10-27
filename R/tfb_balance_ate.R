@@ -18,6 +18,8 @@
 #'
 #' @import Rmosek
 #' @import SparseM
+#' @import stats
+#' @import methods
 #' @keywords tfb
 #' @examples
 #' set.seed(1221)
@@ -181,8 +183,8 @@ tfb_balance_ate <- function(
     rep(0, p_t),                        # v_2t
     rep(1, 2),                          # t_1c
     rep(1, 2),                          # t_1t
-    sqrt(qchisq(p = chi_q, df=p_c)),        # t_2c
-    sqrt(qchisq(p = chi_q, df=p_c)),        # t_2t
+    sqrt(stats::qchisq(p = chi_q, df=p_c)),        # t_2c
+    sqrt(stats::qchisq(p = chi_q, df=p_c)),        # t_2t
     -1,                                 # t_3
                                         # everything else
     rep(0, dim - n_c - n_t - 2 * p_c - 2 * p_t - 7)
@@ -226,7 +228,7 @@ tfb_balance_ate <- function(
     A.u2s
   )
   A <- SparseM::as.matrix.csr(A)
-  P$A <- as(A, "CsparseMatrix")
+  P$A <- methods::as(A, "CsparseMatrix")
 
   bc <- cbind(     # linear constraint bounds
     bc.sum_to_n_c,

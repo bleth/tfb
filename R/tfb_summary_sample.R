@@ -15,6 +15,7 @@
 #' * `confidence_interval`: the confidence interval for the estimate for the sample
 #' * `p_value`: the p-value for the estimate
 #'
+#' @import stats
 #' @keywords tfb
 #' @examples
 #' d <- iris[, 5] == "setosa"
@@ -48,10 +49,10 @@ tfb_summary_sample <- function(
     w[indices[[i]] == 1] <- weights[[i]]
   }
 
-  ci_lower <- wdim - qnorm((1 + confidence) / 2) * sqrt(v_hat)
-  ci_upper <- wdim + qnorm((1 + confidence) / 2) * sqrt(v_hat)
+  ci_lower <- wdim - stats::qnorm((1 + confidence) / 2) * sqrt(v_hat)
+  ci_upper <- wdim + stats::qnorm((1 + confidence) / 2) * sqrt(v_hat)
 
-  p_val = min(pnorm(wdim, 0, sqrt(v_hat)), 1 - pnorm(wdim, 0, sqrt(v_hat)))
+  p_val = min(stats::pnorm(wdim, 0, sqrt(v_hat)), 1 - stats::pnorm(wdim, 0, sqrt(v_hat)))
 
   out <- list(
       estimate = wdim,

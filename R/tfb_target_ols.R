@@ -21,6 +21,7 @@
 #' * `yhat`: The predicted outcomes within the fold.
 #' * `X_tf`: The covariates as they were used to fit the model.
 #'
+#' @import stats
 #' @keywords tfb
 #' @examples
 #' X <- as.matrix(iris[, 2:4])
@@ -57,10 +58,10 @@ tfb_target_ols <- function(
 
   # for a given fold, train model on other folds
   if (reg_d) {
-    model <- do.call(lm, c(list(formula = y[i_out] ~ d[i_out] + X[i_out, ]),params))
+    model <- do.call(stats::lm, c(list(formula = y[i_out] ~ d[i_out] + X[i_out, ]),params))
     coeffs <- unname(c(model$coefficients[1] + model$coefficients[2] * treatment, model$coefficients[-(1:2)]))
   } else {
-    model <- do.call(lm, c(list(formula = y[i_out & (d == treatment)] ~ X[i_out & (d == treatment), ]),params))
+    model <- do.call(stats::lm, c(list(formula = y[i_out & (d == treatment)] ~ X[i_out & (d == treatment), ]),params))
     coeffs <- unname(model$coefficients)
   }
 
@@ -77,9 +78,9 @@ tfb_target_ols <- function(
     }
   } else {
     if (reg_d) {
-      vcov(model)[-(1:2),-(1:2)]
+      stats::vcov(model)[-(1:2),-(1:2)]
     } else {
-      vcov(model)[-1, -1]
+      stats::vcov(model)[-1, -1]
     }
   }
 

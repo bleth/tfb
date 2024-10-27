@@ -8,6 +8,7 @@
 #' @returns A numeric vector of coefficients.
 #'
 #' @import KRLS
+#' @import stats
 #' @keywords tfb
 #' @examples
 #' set.seed(1221)
@@ -19,6 +20,6 @@
 #' tfb:::tfb_betafn_krls(X[boot,],y[boot],list())
 
 tfb_betafn_krls <- function(X,y,params) {
-  model <- do.call(krls::krls, c(list(X=X,y=y),params))
-  return(model$coeffs * sd(y))
+  model <- do.call(KRLS::krls, c(list(X=X,y=y),params))
+  return(model$coeffs * stats::sd(y))
 }

@@ -60,6 +60,7 @@
 #'
 #'
 #' @import fastDummies
+#' @import stats
 #' @keywords tfb
 #' @export
 #' @examples
@@ -290,19 +291,19 @@ tfb <- function(
     # binding output for the sample
     output <- c(output, list(. = list(
       final = out,
-      indices = setNames(lapply(lapply(args[startsWith(args,"i_")], as.symbol),eval,envir=environment()),args[startsWith(args,"i_")]),
-      betas = setNames(lapply(lapply(args[startsWith(args,"beta_")], as.symbol),eval,envir=environment()),args[startsWith(args,"beta_")]),
-      covariances = setNames(lapply(lapply(args[startsWith(args,"V_")], as.symbol),eval,envir=environment()),args[startsWith(args,"V_")]),
-      errors = setNames(lapply(lapply(args[startsWith(args,"e_")], as.symbol),eval,envir=environment()),args[startsWith(args,"e_")]),
-      standard_errors = setNames(lapply(lapply(args[startsWith(args,"sigma2_")], as.symbol),eval,envir=environment()),args[startsWith(args,"sigma2_")]),
-      dims = setNames(lapply(lapply(args[startsWith(args,"dim_")], as.symbol),eval,envir=environment()),args[startsWith(args,"dim_")]),
-      estimates = setNames(lapply(lapply(args[startsWith(args,"wdim_")], as.symbol),eval,envir=environment()),args[startsWith(args,"wdim_")]),
-      variances = setNames(lapply(lapply(args[startsWith(args,"v_hat_")], as.symbol),eval,envir=environment()),args[startsWith(args,"v_hat_")])
+      indices = stats::setNames(lapply(lapply(args[startsWith(args,"i_")], as.symbol),eval,envir=environment()),args[startsWith(args,"i_")]),
+      betas = stats::setNames(lapply(lapply(args[startsWith(args,"beta_")], as.symbol),eval,envir=environment()),args[startsWith(args,"beta_")]),
+      covariances = stats::setNames(lapply(lapply(args[startsWith(args,"V_")], as.symbol),eval,envir=environment()),args[startsWith(args,"V_")]),
+      errors = stats::setNames(lapply(lapply(args[startsWith(args,"e_")], as.symbol),eval,envir=environment()),args[startsWith(args,"e_")]),
+      standard_errors = stats::setNames(lapply(lapply(args[startsWith(args,"sigma2_")], as.symbol),eval,envir=environment()),args[startsWith(args,"sigma2_")]),
+      dims = stats::setNames(lapply(lapply(args[startsWith(args,"dim_")], as.symbol),eval,envir=environment()),args[startsWith(args,"dim_")]),
+      estimates = stats::setNames(lapply(lapply(args[startsWith(args,"wdim_")], as.symbol),eval,envir=environment()),args[startsWith(args,"wdim_")]),
+      variances = stats::setNames(lapply(lapply(args[startsWith(args,"v_hat_")], as.symbol),eval,envir=environment()),args[startsWith(args,"v_hat_")])
     )))
 
   }
 
-  output <- setNames(output,paste0("sample_",seq_len(samples)))
+  output <- stats::setNames(output,paste0("sample_",seq_len(samples)))
 
   # binding final summary stats/output
   out <- tfb_summary(d,y,estimand,confidence,wdims_samples,v_hats_samples)

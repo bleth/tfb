@@ -18,9 +18,11 @@ Imports:
     fastDummies,
     glmnet,
     KRLS,
+    methods,
     Rmosek,
     RSpectra,
-    SparseM
+    SparseM,
+    stats
 Suggests: 
     knitr,
     rmarkdown,

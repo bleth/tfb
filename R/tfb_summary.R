@@ -15,6 +15,7 @@
 #' * `p_value`: the p-value for the estimate
 #' * `dim`: the naive difference in means for the data
 #'
+#' @import stats
 #' @keywords tfb
 #' @examples
 #' d <- iris[, 5] == "setosa"
@@ -40,14 +41,14 @@ tfb_summary <- function(
 
   dim <- mean(y[d==1]) - mean(y[d==0])
 
-  wdim <- median(wdims_samples)
+  wdim <- stats::median(wdims_samples)
 
-  v_hat <- median(v_hats_samples + (wdims_samples - wdim)^2/length(d))
+  v_hat <- stats::median(v_hats_samples + (wdims_samples - wdim)^2/length(d))
 
-  ci_lower <- wdim - qnorm((1 + confidence) / 2) * sqrt(v_hat)
-  ci_upper <- wdim + qnorm((1 + confidence) / 2) * sqrt(v_hat)
+  ci_lower <- wdim - stats::qnorm((1 + confidence) / 2) * sqrt(v_hat)
+  ci_upper <- wdim + stats::qnorm((1 + confidence) / 2) * sqrt(v_hat)
 
-  p_val = min(pnorm(wdim, 0, sqrt(v_hat)), 1 - pnorm(wdim, 0, sqrt(v_hat)))
+  p_val = min(stats::pnorm(wdim, 0, sqrt(v_hat)), 1 - stats::pnorm(wdim, 0, sqrt(v_hat)))
 
   out <- list(
     final = list(
