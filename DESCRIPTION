@@ -2,8 +2,9 @@ Package: tfb
 Title: Targeted Function Balancing
 Version: 0.0.0.9000
 Authors@R: 
-    person("Kenai", "Burton-Heckman", , "kenaiburton@gmail.com", role = c("aut", "cre"),
-           comment = c(ORCID = "0009-0008-6851-4223"))
+    c(person("Kenai", "Burton-Heckman", , "kenaiburton@gmail.com", role = c("aut", "cre"),
+           comment = c(ORCID = "0009-0008-6851-4223")),
+      person("Leonard", "Wainstein", email = "lwainstein@reed.edu", role = "ctb"))
 Description: Targeted function balancing, or TFB, is a statistical method
     for causal inference. tfb is the official package for the
     implementation of TFB into the programming language R. TFB Targets a
