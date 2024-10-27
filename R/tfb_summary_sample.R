@@ -34,7 +34,7 @@
 #'   1.75,1.75)*1e-8)
 #' )
 #' set.seed(1221)
-#' i <- sample(rep(c(T,F),75))
+#' i <- sample(rep(c(TRUE,FALSE),75))
 #' indices <- list(i,!i) # indices for iris datafrom tfb_fold
 #' v_hats <- c(0.021,0.0903) # variances for iris data from tfb_variance_att
 #' tfb:::tfb_summary_sample(d,0.95,wdim,weights,indices,v_hats)

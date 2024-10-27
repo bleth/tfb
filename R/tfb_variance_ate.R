@@ -18,7 +18,7 @@
 #' y <- iris[, 1]
 #' d <- iris[, 5] == "setosa"
 #' set.seed(1221)
-#' i <- sample(rep(c(T,F),75))
+#' i <- sample(rep(c(TRUE,FALSE),75))
 #' # coefficients for iris data from tfb_target_ols
 #' yhat_c <- (cbind(1, X) %*% c(1.8,0.565,0.812,-0.686))[i]
 #' yhat_t <- (cbind(1, X) %*% c(2.28,0.532,0.632,-0.251))[i]

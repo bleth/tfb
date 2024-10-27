@@ -3,7 +3,7 @@
 #' This function bootstraps a given fit's covariance matrix by re-sampling with replacement and re-fitting the model repeatedly.
 #' @param X covariates
 #' @param y responses
-#' @param beta_fn function taking X,y that returns beta
+#' @param betafn function taking X,y that returns beta
 #' @param bstrap_reps number of repetitions
 #' @param params additional arguments for the fit
 #'
@@ -13,7 +13,8 @@
 #' @keywords tfb
 #' @examples
 #' set.seed(1221)
-#' i <- sample(rep(c(T,F),75)) # fold indices for iris data from tfb_fold
+#' # fold indices for iris data from tfb_fold
+#' i <- sample(rep(c(TRUE,FALSE),75))
 #' d <- iris[, 5] == "setosa"
 #' X <- as.matrix(iris[!i & !d, 2:4])
 #' y <- iris[!i & !d, 1]

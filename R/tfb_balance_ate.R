@@ -23,7 +23,7 @@
 #' @keywords tfb
 #' @examples
 #' set.seed(1221)
-#' i <- sample(rep(c(T,F),75))
+#' i <- sample(rep(c(TRUE,FALSE),75))
 #' # only observations in the split are used to fit the initial regression
 #' X <- as.matrix(iris[, 2:4])[i,]
 #' d <- iris[, 5] == "setosa"
@@ -45,7 +45,7 @@
 #' sigma2_c <- 0.12
 #' sigma2_t <- 0.0616
 #' tfb:::tfb_balance_ate(
-#'   X,X,beta_c,beta_t,sqrtV_c,sqrtV_t,sigma2_c,sigma2_t,i,d,0.95,T
+#'   X,X,beta_c,beta_t,sqrtV_c,sqrtV_t,sigma2_c,sigma2_t,i,d,0.95,TRUE
 #' )
 
 

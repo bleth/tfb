@@ -28,8 +28,9 @@
 #' d <- iris[, 5] == "setosa"
 #' y <- iris[, 1]
 #' set.seed(1221)
-#' i <- sample(rep(c(T,F),75)) # fold indices for iris data from tfb_fold
-#' tfb:::tfb_target_ols(X,d,y,i,F,NULL,F,"c",T,list())
+#' # fold indices for iris data from tfb_fold
+#' i <- sample(rep(c(TRUE,FALSE),75))
+#' tfb:::tfb_target_ols(X,d,y,i,FALSE,NULL,FALSE,"c",TRUE,list())
 
 tfb_target_ols <- function(
 

@@ -28,8 +28,9 @@
 #' d <- iris[, 5] == "setosa"
 #' y <- iris[, 1]
 #' set.seed(1221)
-#' i <- sample(rep(c(T,F),75)) # fold indices for iris data from tfb_fold
-#' tfb:::tfb_target_elasticnet(X,d,y,i,T,400,F,"c",T,list())
+#' # fold indices for iris data from tfb_fold
+#' i <- sample(rep(c(TRUE,FALSE),75))
+#' tfb:::tfb_target_elasticnet(X,d,y,i,TRUE,400,FALSE,"c",TRUE,list())
 
 tfb_target_elasticnet <- function(
 

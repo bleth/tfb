@@ -19,7 +19,7 @@
 #' @keywords tfb
 #' @examples
 #' set.seed(1221)
-#' i <- sample(rep(c(T,F),75))
+#' i <- sample(rep(c(TRUE,FALSE),75))
 #' # only observations in the split are used to fit the initial regression
 #' X <- as.matrix(iris[, 2:4])[i,]
 #' d <- iris[, 5] == "setosa"
@@ -33,7 +33,7 @@
 #' )
 #' # standard error for iris data from tfb_target_ols
 #' sigma2 <- 0.12
-#' tfb:::tfb_balance_att(X,beta,sqrtV,sigma2,i,d,0.95,T)
+#' tfb:::tfb_balance_att(X,beta,sqrtV,sigma2,i,d,0.95,TRUE)
 
 
 ### Optimization Function

@@ -5,7 +5,7 @@
 #' @param w weights
 #' @param d treatment vector
 #' @param y outcome vector
-#' @param target target treatment value
+#' @param estimand estimand being estimated
 #'
 #' @returns A list:
 #' * `wdim`: The weighted difference in means within the fold.
@@ -14,7 +14,7 @@
 #' @keywords tfb
 #' @examples
 #' set.seed(1221)
-#' i <- sample(rep(c(T,F),75))
+#' i <- sample(rep(c(TRUE,FALSE),75))
 #' # weights for iris data from tfb_balance_att
 #' w <- c(rep(1,32),c(1.79,1.69,1.92e8,2.05e2,1.57,1.13e2,2.25,1.76,1.46,2.07,
 #' 1.46,1.43,2.69e1,5.2,5.66,4.56,2.83,1.7,3.41,2.38e8,2.56,1.02,9.48e-1,1.2,

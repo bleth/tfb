@@ -12,7 +12,8 @@
 #' X <- as.matrix(iris[,2:4])
 #' d <- iris[, 5] == "setosa"
 #' set.seed(1221)
-#' i <- sample(rep(c(T,F),75)) # fold indices for iris data from tfb_fold
+#' # fold indices for iris data from tfb_fold
+#' i <- sample(rep(c(TRUE,FALSE),75))
 #' tfb:::tfb_gram_matrix(X[i, ], X[!i & d, ], tfb:::tfb_kernelfn)
 
 
