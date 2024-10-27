@@ -29,7 +29,11 @@ This function returns the square root of the covariance matrix or an approximati
 }
 \examples{
 # covariance matrix for iris data from tfb_target_ols
-V <- matrix(c(0.0319,-0.00368,-0.00433,-0.00368,0.0122,-0.0175,-0.00433,-0.0175,0.0436),nrow=3)
-tfb:::tfb_sqrtV(V,F,NULL,T,1,1,"c")
+V <- matrix(
+  c(0.0319,-0.00368,-0.00433,
+  -0.00368,0.0122,-0.0175,
+  -0.00433,-0.0175,0.0436),nrow=3
+)
+tfb:::tfb_sqrtV(V,FALSE,NULL,TRUE,1,1,"c")
 }
 \keyword{tfb}

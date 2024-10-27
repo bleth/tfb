@@ -11,11 +11,11 @@ tfb_bootstrapped_covariance(X, y, betafn, bstrap_reps, params)
 
 \item{y}{responses}
 
+\item{betafn}{function taking X,y that returns beta}
+
 \item{bstrap_reps}{number of repetitions}
 
 \item{params}{additional arguments for the fit}
-
-\item{beta_fn}{function taking X,y that returns beta}
 }
 \value{
 A numeric matrix, the bootstrapped covariance matrix of the model.
@@ -25,7 +25,8 @@ This function bootstraps a given fit's covariance matrix by re-sampling with rep
 }
 \examples{
 set.seed(1221)
-i <- sample(rep(c(T,F),75)) # fold indices for iris data from tfb_fold
+# fold indices for iris data from tfb_fold
+i <- sample(rep(c(TRUE,FALSE),75))
 d <- iris[, 5] == "setosa"
 X <- as.matrix(iris[!i & !d, 2:4])
 y <- iris[!i & !d, 1]

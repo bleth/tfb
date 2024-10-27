@@ -106,7 +106,8 @@ The dynamic dots also allow for a number of additional, more technical parameter
 X <- iris[, 2:4]
 d <- iris[, 5] == "setosa"
 y <- iris[, 1]
-# estimating the effect of `Species == "setosa"` on `Sepal.Length` given `Sepal.Width`, `Petal.Length`, and `Petal.Width`
+# estimating the effect of `Species == "setosa"` on `Sepal.Length`
+# given `Sepal.Width`, `Petal.Length`, and `Petal.Width`
 tfb(X, d, y, fit = "ols", estimand = "att")$final$estimate
 
 }

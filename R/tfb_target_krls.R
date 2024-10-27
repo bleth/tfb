@@ -23,7 +23,7 @@
 #' * `X_tf`: The covariates as they were used to fit the model. As in, the kernel matrix.
 #'
 #' @import KRLS
-#' @import stats
+#' @importFrom stats var sd
 #' @keywords tfb
 #' @examples
 #' X <- as.matrix(iris[, 2:4])
@@ -74,7 +74,7 @@ tfb_target_krls <- function(
   ## REMOVE ONCE A SOLUTION TO THE KRLS CONSOLE OUTPUT IS DECIDED ON ##
 
   if (quiet) {params <- c(print.level = 0, params)}
-  #krlsfn <- KRLS::krls
+  krlsfn <- KRLS::krls
   betafn <- tfb_betafn_krls
 
   #####################################################################
@@ -82,12 +82,12 @@ tfb_target_krls <- function(
   if (reg_d) {
     bandwidth <- ncol(X) + 1
     model <- do.call(krlsfn, c(list(X = cbind(d,X)[i_out, ], y = y[i_out]),params))
-    beta <- model$coeffs * stats::sd(y[i_out])
+    beta <- model$coeffs * sd(y[i_out])
     fitted <- KRLS::predict.krls(model, cbind(treatment,X))$fit
   } else {
     bandwidth <- ncol(X)
     model <- do.call(krlsfn, c(list(X = X[i_out & (d == treatment), ], y = y[i_out & (d == treatment)]),params))
-    beta <- model$coeffs * stats::sd(y[i_out & (d == treatment)])
+    beta <- model$coeffs * sd(y[i_out & (d == treatment)])
     fitted <- KRLS::predict.krls(model, X)$fit
   }
 
@@ -99,13 +99,13 @@ tfb_target_krls <- function(
     if (bstrap_cov) {
       V <- tfb_bootstrapped_covariance(cbind(d = treatment,X)[i_out, ],y[i_out],betafn,bstrap_reps,params)
     } else {
-      V <- model$vcov.c * stats::var(y[i_out])
+      V <- model$vcov.c * var(y[i_out])
     }
   } else {
     if (bstrap_cov) {
       V <- tfb_bootstrapped_covariance(X[i_out & (d == treatment), ],y[i_out & (d == treatment)],betafn,bstrap_reps,params)
     } else {
-      V <- model$vcov.c * stats::var(y[i_out & (d == treatment)])
+      V <- model$vcov.c * var(y[i_out & (d == treatment)])
     }
   }
 

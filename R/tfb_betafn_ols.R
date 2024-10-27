@@ -7,7 +7,7 @@
 #'
 #' @returns A numeric vector of coefficients.
 #'
-#' @import stats
+#' @importFrom stats lm
 #' @keywords tfb
 #' @examples
 #' set.seed(1221)
@@ -20,6 +20,6 @@
 #' tfb:::tfb_betafn_ols(X[boot,],y[boot],list())
 
 tfb_betafn_ols <- function(X,y,params) {
-  model <- do.call(stats::lm,c(list(formula = y ~ X),params))
+  model <- do.call(lm,c(list(formula = y ~ X),params))
   return(unname(model$coefficients[-1]))
 }

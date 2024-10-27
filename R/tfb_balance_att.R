@@ -14,8 +14,8 @@
 #'
 #' @import Rmosek
 #' @import SparseM
-#' @import stats
-#' @import methods
+#' @importFrom stats qchisq
+#' @importFrom methods as
 #' @keywords tfb
 #' @examples
 #' set.seed(1221)
@@ -124,7 +124,7 @@ tfb_balance_att <- function(
       rep(0, p),                 # for v2,
       1,                         # t_1^(1)
       1,                         # t_1^(2)
-      sqrt(stats::qchisq(p = chi_q, df=p)), # t_2
+      sqrt(qchisq(p = chi_q, df=p)), # t_2
       -1,                        # t_3
       rep(0, 4)                  # u's
     )
@@ -152,7 +152,7 @@ tfb_balance_att <- function(
       A.u2s
     )
     A <- SparseM::as.matrix.csr(A)
-    P$A <- methods::as(A, "CsparseMatrix")
+    P$A <- as(A, "CsparseMatrix")
 
     bc <- cbind(
       bc.sum_to_n_c,

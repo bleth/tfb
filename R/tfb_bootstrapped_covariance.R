@@ -9,7 +9,7 @@
 #'
 #' @returns A numeric matrix, the bootstrapped covariance matrix of the model.
 #'
-#' @import stats
+#' @importFrom stats cov
 #' @keywords tfb
 #' @examples
 #' set.seed(1221)
@@ -44,5 +44,5 @@ tfb_bootstrapped_covariance <- function(
     }
   }
 
-  return(stats::cov(betas))
+  return(cov(betas))
 }
