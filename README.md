@@ -58,7 +58,8 @@ field.
 
 For a detailed treatment of the assumptions and conditions of `tfb`’s
 best use case, please see the *Assumptions* and *Conditions* subsections
-of the Background section of `docs/tfb_kbh.pdf`.
+of the Background section of my paper, which can be found here:
+<https://github.com/bleth/tfb/blob/main/papers/tfb_kbh.pdf>.
 
 To properly use `tfb`, you’ll want a few things in your data:
 
@@ -92,12 +93,12 @@ You will also need to specify:
 ### Data Exploration
 
 TFB includes 4 sample datasets for the user. They have been created via
-data generating process (DGP) from `docs/tfb_lw.pdf` and
-`docs/tfb_kbh.pdf`. Looking at the first dataset:
+data generating process (DGP), the specifics of which are available at
+<https://github.com/bleth/tfb/blob/main/data-raw/tfb_sampledat1.R>.
+Looking at the first dataset:
 
 ``` r
-# from within the docs folder
-df <- tfb::tfb_sampledf1
+df <- tfb::tfb_sampledat1
 ```
 
 Our covariates here are `x1` and `x2`. Our treatment vector is `d`, and
