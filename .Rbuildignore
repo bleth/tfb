@@ -1,4 +1,5 @@
 ^tfb\.Rproj$
 ^\.Rproj\.user$
 ^LICENSE\.md$
-^docs$
+^papers$
+^README\.Rmd$
