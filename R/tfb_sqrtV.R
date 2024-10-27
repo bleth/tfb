@@ -45,7 +45,7 @@ tfb_sqrtV <- function(
       ev_n <- nrow(V)
       if (!quiet) {message(paste0(iteration, "`ev_n` exceeds size of the covariance matrix, performing full decomposition."))}
     }
-    decomposition <- eigs_sym(V, ev_n)
+    decomposition <- RSpectra::eigs_sym(V, ev_n)
   } else {
     decomposition <- eigen(V, T)
   }

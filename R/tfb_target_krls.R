@@ -63,14 +63,14 @@ tfb_target_krls <- function(
   #   betafn <- tfb_betafn_krls_quiet
   #   params <- c(print.level = 0, params)
   # } else {
-  #   krlsfn <- krls
+  #   krlsfn <- krls::krls
   #   betafn <- tfb_betafn_krls
   # }
 
   ## REMOVE ONCE A SOLUTION TO THE KRLS CONSOLE OUTPUT IS DECIDED ON ##
 
   if (quiet) {params <- c(print.level = 0, params)}
-  krlsfn <- krls
+  krlsfn <- krls::krls
   betafn <- tfb_betafn_krls
 
   #####################################################################

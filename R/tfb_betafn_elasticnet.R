@@ -19,6 +19,6 @@
 #' tfb:::tfb_betafn_elasticnet(X[boot,],y[boot],list())
 
 tfb_betafn_elasticnet <- function(X,y,params) {
-  model <- do.call(cv.glmnet, c(list(x = X, y = y),params))
+  model <- do.call(glmnet::cv.glmnet, c(list(x = X, y = y),params))
   return(model$glmnet.fit$beta[, model$index[2]])
 }

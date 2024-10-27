@@ -141,7 +141,7 @@ tfb_balance_att <- function(
       A.bias,
       A.u2s
     )
-    A <- as.matrix.csr(A)
+    A <- SparseM::as.matrix.csr(A)
     P$A <- as(A, "CsparseMatrix")
 
     bc <- cbind(
@@ -204,7 +204,7 @@ tfb_balance_att <- function(
     )
 
     # Get solution
-    solution <- mosek(P, opts = list(verbose = verb))
+    solution <- Rmosek::mosek(P, opts = list(verbose = verb))
 
     if (!quiet) {message(solution$sol$itr$solsta)}
 

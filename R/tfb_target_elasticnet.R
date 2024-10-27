@@ -58,11 +58,11 @@ tfb_target_elasticnet <- function(
 
   # for a given fold, train model on other folds
   if (reg_d) {
-    model <- do.call(cv.glmnet, c(list(x = cbind(d,X)[i_out, ], y = y[i_out]),params))
+    model <- do.call(glmnet::cv.glmnet, c(list(x = cbind(d,X)[i_out, ], y = y[i_out]),params))
     beta <- model$glmnet.fit$beta[, model$index[2]][-1]
     fitted <- predict(model, cbind(d = treatment,X), s = model$lambda.1se)
   } else {
-    model <- do.call(cv.glmnet, c(list(x = X[i_out & (d == treatment), ], y = y[i_out & (d == treatment)]),params))
+    model <- do.call(glmnet::cv.glmnet, c(list(x = X[i_out & (d == treatment), ], y = y[i_out & (d == treatment)]),params))
     beta <- model$glmnet.fit$beta[, model$index[2]]
     fitted <- predict(model, X, s = model$lambda.1se)
   }

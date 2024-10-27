@@ -117,7 +117,7 @@ tfb <- function(
   if (!(is.matrix(X) | is.data.frame(X))) {stop("`X` must be a matrix or data frame.\n")}
   if (sum(sapply(1:ncol(X), function(i) class(X[,i])) %in% c("factor", "character")) > 0) {
     message("Categorical covariates are being expanded to one or more binary covariates for their respective levels.\n")
-    x <- dummy_cols(X, remove_first_dummy = T)
+    x <- fastDummies::dummy_cols(X, remove_first_dummy = T)
   }
   X <- as.matrix(X)
   if (nrow(X) < 1 | ncol(X) < 1) {stop("`X` must contain data.\n")}

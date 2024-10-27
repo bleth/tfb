@@ -225,7 +225,7 @@ tfb_balance_ate <- function(
     A.bias,
     A.u2s
   )
-  A <- as.matrix.csr(A)
+  A <- SparseM::as.matrix.csr(A)
   P$A <- as(A, "CsparseMatrix")
 
   bc <- cbind(     # linear constraint bounds
@@ -323,7 +323,7 @@ tfb_balance_ate <- function(
     MSK_DPAR_BASIS_REL_TOL_S = rtol
   )
 
-  solution <- mosek(P, opts = list(verbose = verb)) # get solution
+  solution <- Rmosek::mosek(P, opts = list(verbose = verb)) # get solution
 
   if (!quiet) {message(solution$sol$itr$solsta)}
 

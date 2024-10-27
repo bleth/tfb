@@ -19,6 +19,6 @@
 #' tfb:::tfb_betafn_krls(X[boot,],y[boot],list())
 
 tfb_betafn_krls <- function(X,y,params) {
-  model <- do.call(krls, c(list(X=X,y=y),params))
+  model <- do.call(krls::krls, c(list(X=X,y=y),params))
   return(model$coeffs * sd(y))
 }

@@ -4,17 +4,31 @@ Version: 0.0.0.9000
 Authors@R: 
     person("Kenai", "Burton-Heckman", , "kenaiburton@gmail.com", role = c("aut", "cre"),
            comment = c(ORCID = "0009-0008-6851-4223"))
-Description: Targeted function balancing, or TFB, is a statistical method for causal inference. tfb is the official package for the implementation of TFB into the programming language R. TFB Targets a predictive Function and Balances observations to determine its final estimate. TFB thereby transforms the question of how best to weight observational study data into how best to model the relationships in that data.
+Description: Targeted function balancing, or TFB, is a statistical method
+    for causal inference. tfb is the official package for the
+    implementation of TFB into the programming language R. TFB Targets a
+    predictive Function and Balances observations to determine its final
+    estimate. TFB thereby transforms the question of how best to weight
+    observational study data into how best to model the relationships in
+    that data.
 License: GPL (>= 3)
-Encoding: UTF-8
-Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.1
 Depends: 
     R (>= 2.10)
-LazyData: true
+Imports: 
+    fastDummies,
+    glmnet,
+    KRLS,
+    Rmosek,
+    RSpectra,
+    SparseM
 Suggests: 
     knitr,
     rmarkdown,
     testthat (>= 3.0.0)
-VignetteBuilder: knitr
+VignetteBuilder: 
+    knitr
 Config/testthat/edition: 3
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.1
