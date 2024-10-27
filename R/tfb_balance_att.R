@@ -20,11 +20,19 @@
 #' @examples
 #' set.seed(1221)
 #' i <- sample(rep(c(T,F),75))
-#' X <- as.matrix(iris[, 2:4])[i,] # only observations in the split are used to fit the initial regression
+#' # only observations in the split are used to fit the initial regression
+#' X <- as.matrix(iris[, 2:4])[i,]
 #' d <- iris[, 5] == "setosa"
-#' beta <- c(0.565,0.812,-0.686) # coefficients for iris data from tfb_target_ols
-#' sqrtV <- matrix(c(0.177,-0.017,-0.0143,-0.017,0.0904,-0.0614,-0.0143,-0.0614,0.199),nrow=3) # root of covariance matrix for iris data from tfb_sqrtV
-#' sigma2 <- 0.12 # standard error for iris data from tfb_target_ols
+#' # coefficients for iris data from tfb_target_ols
+#' beta <- c(0.565,0.812,-0.686)
+#' # root of covariance matrix for iris data from tfb_sqrtV
+#' sqrtV <- matrix(
+#'   c(0.177,-0.017,-0.0143,
+#'   -0.017,0.0904,-0.0614,
+#'   -0.0143,-0.0614,0.199),nrow=3
+#' )
+#' # standard error for iris data from tfb_target_ols
+#' sigma2 <- 0.12
 #' tfb:::tfb_balance_att(X,beta,sqrtV,sigma2,i,d,0.95,T)
 
 
