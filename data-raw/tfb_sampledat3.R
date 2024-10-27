@@ -47,7 +47,7 @@ y <-  f0 + error_sigma*error
 y0 <- y1 <- y
 
 ### Create data
-tfb_sampledf3 <- cbind(x1,x2,d,y,y0,y1)
+tfb_sampledat3 <- cbind(x1,x2,d,y,y0,y1)
 
 # not run
 #
@@ -57,4 +57,4 @@ tfb_sampledf3 <- cbind(x1,x2,d,y,y0,y1)
 #
 # out <- tfb(X, d, y, fit = "lm", estimand = "att")
 
-usethis::use_data(tfb_sampledf3)
+usethis::use_data(tfb_sampledat3)

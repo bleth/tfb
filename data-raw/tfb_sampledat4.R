@@ -36,7 +36,7 @@ colnames(U) <- paste("u", 1:p_U, sep="")
 
 ### Combine into dataset
 y0 <- y1 <- y
-tfb_sampledf4 <- cbind(y, y0, y1, d, z1, z2, z3, z4, A, U)
+tfb_sampledat4 <- cbind(y, y0, y1, d, z1, z2, z3, z4, A, U)
 
 # not run
 #
@@ -46,4 +46,4 @@ tfb_sampledf4 <- cbind(y, y0, y1, d, z1, z2, z3, z4, A, U)
 #
 # out <- tfb(X, d, y, fit = "lm", estimand = "att")
 
-usethis::use_data(tfb_sampledf4)
+usethis::use_data(tfb_sampledat4)

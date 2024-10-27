@@ -14,7 +14,7 @@ makedf <- function(n) {
 }
 
 set.seed(121)
-tfb_sampledf2 <- makedf(1000)
+tfb_sampledat2 <- makedf(1000)
 
 # not run
 #
@@ -24,4 +24,4 @@ tfb_sampledf2 <- makedf(1000)
 #
 # out <- tfb(X, d, y, fit = "krls", estimand = "att")
 
-usethis::use_data(tfb_sampledf2)
+usethis::use_data(tfb_sampledat2)
