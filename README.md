@@ -4,6 +4,8 @@
 # tfb
 
 <!-- badges: start -->
+
+[![R-CMD-check](https://github.com/bleth/tfb/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/bleth/tfb/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
 ## Overview
@@ -404,8 +406,12 @@ out$sample_1$betas
 # out$sample_1$dims
 
 # fold wdims
-out$sample_1$wdims
-#> NULL
+out$sample_1$estimates
+#> $wdim_1
+#> [1] -0.7236569
+#> 
+#> $wdim_2
+#> [1] -1.230377
 
 # fold wdim variances
 # out$sample_1$variances

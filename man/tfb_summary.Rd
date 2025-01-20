@@ -25,7 +25,7 @@ A list:
 \item \code{estimate}: the final tfb estimate
 \item \code{variance}: the final variance of the tfb estimate
 \item \code{confidence_interval}: the confidence interval for the estimate
-\item \code{p_value}: the p-value for the estimate
+\item \code{p_value}: the two-sided p-value for the estimate
 \item \code{dim}: the naive difference in means for the data
 }
 }

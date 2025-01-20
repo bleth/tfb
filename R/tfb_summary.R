@@ -12,7 +12,7 @@
 #' * `estimate`: the final tfb estimate
 #' * `variance`: the final variance of the tfb estimate
 #' * `confidence_interval`: the confidence interval for the estimate
-#' * `p_value`: the p-value for the estimate
+#' * `p_value`: the two-sided p-value for the estimate
 #' * `dim`: the naive difference in means for the data
 #'
 #' @importFrom stats median qnorm pnorm
@@ -48,7 +48,7 @@ tfb_summary <- function(
   ci_lower <- wdim - qnorm((1 + confidence) / 2) * sqrt(v_hat)
   ci_upper <- wdim + qnorm((1 + confidence) / 2) * sqrt(v_hat)
 
-  p_val = min(pnorm(wdim, 0, sqrt(v_hat)), 1 - pnorm(wdim, 0, sqrt(v_hat)))
+  p_val = 2 * min(pnorm(wdim, 0, sqrt(v_hat)), 1 - pnorm(wdim, 0, sqrt(v_hat)))
 
   out <- list(
     final = list(

@@ -13,7 +13,7 @@
 #' * `variance`: the final variance of the tfb estimate for the sample
 #' * `weights`: the weights for the sample
 #' * `confidence_interval`: the confidence interval for the estimate for the sample
-#' * `p_value`: the p-value for the estimate
+#' * `p_value`: the two-sided p-value for the estimate
 #'
 #' @importFrom stats qnorm pnorm
 #' @keywords tfb
@@ -60,7 +60,7 @@ tfb_summary_sample <- function(
   ci_lower <- wdim - qnorm((1 + confidence) / 2) * sqrt(v_hat)
   ci_upper <- wdim + qnorm((1 + confidence) / 2) * sqrt(v_hat)
 
-  p_val = min(pnorm(wdim, 0, sqrt(v_hat)), 1 - pnorm(wdim, 0, sqrt(v_hat)))
+  p_val = 2 * min(pnorm(wdim, 0, sqrt(v_hat)), 1 - pnorm(wdim, 0, sqrt(v_hat)))
 
   out <- list(
       estimate = wdim,

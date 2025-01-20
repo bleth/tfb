@@ -18,7 +18,8 @@
 #' d <- iris[, 5] == "setosa"
 #' X <- as.matrix(iris[!i & !d, 2:4])
 #' y <- iris[!i & !d, 1]
-#' tfb:::tfb_bootstrapped_covariance(X,y,tfb:::tfb_betafn_elasticnet,100,list())
+#' # lambda from cv.glmnet
+#' tfb:::tfb_bootstrapped_covariance(X,y,tfb:::tfb_betafn_elasticnet,100,list(lambda = 0.000611))
 
 
 ### KRLS Initial Regression Function

@@ -42,7 +42,7 @@ tfb_target_ols(
 A list:
 \itemize{
 \item \code{beta}: The regression coefficients of the model, excluding the intercept.
-\item \code{V}: The covariance matrix.
+\item \code{V}: The robust covariance matrix.
 \item \code{e}: The residuals of the model within the fold.
 \item \code{sigma2}: The estimate of the model's standard error.
 \item \code{yhat}: The predicted outcomes within the fold.

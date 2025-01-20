@@ -26,7 +26,7 @@ A list:
 \item \code{variance}: the final variance of the tfb estimate for the sample
 \item \code{weights}: the weights for the sample
 \item \code{confidence_interval}: the confidence interval for the estimate for the sample
-\item \code{p_value}: the p-value for the estimate
+\item \code{p_value}: the two-sided p-value for the estimate
 }
 }
 \description{

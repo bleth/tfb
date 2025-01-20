@@ -16,6 +16,7 @@ knitr::opts_chunk$set(
 # tfb
 
 <!-- badges: start -->
+[![R-CMD-check](https://github.com/bleth/tfb/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/bleth/tfb/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
 
@@ -289,7 +290,7 @@ out$sample_1$betas
 # out$sample_1$dims
 
 # fold wdims
-out$sample_1$wdims
+out$sample_1$estimates
 
 # fold wdim variances
 # out$sample_1$variances

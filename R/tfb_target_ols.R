@@ -15,13 +15,14 @@
 #' @returns
 #' A list:
 #' * `beta`: The regression coefficients of the model, excluding the intercept.
-#' * `V`: The covariance matrix.
+#' * `V`: The robust covariance matrix.
 #' * `e`: The residuals of the model within the fold.
 #' * `sigma2`: The estimate of the model's standard error.
 #' * `yhat`: The predicted outcomes within the fold.
 #' * `X_tf`: The covariates as they were used to fit the model.
 #'
-#' @importFrom stats lm vcov
+#' @importFrom stats lm
+#' @importFrom sandwich vcovHC
 #' @keywords tfb
 #' @examples
 #' X <- as.matrix(iris[, 2:4])
@@ -79,9 +80,9 @@ tfb_target_ols <- function(
     }
   } else {
     if (reg_d) {
-      vcov(model)[-(1:2),-(1:2)]
+      vcovHC(model)[-(1:2),-(1:2)]
     } else {
-      vcov(model)[-1, -1]
+      vcovHC(model)[-1, -1]
     }
   }
 
