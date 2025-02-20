@@ -36,9 +36,7 @@ tfb_estimate_fold <- function(
 
 ){
 
-  if (estimand == "atc") {
-    d <- 1 - d
-  }
+  if (estimand == "atc") {d <- 1 - d}
 
   wdim <- (mean(w[d[i == 1] == 1] * y[(i == 1) & (d == 1)]) - mean(w[d[i == 1] == 0] * y[(i == 1) & (d == 0)]))
   dim <- mean(y[(i == 1) & (d == 1)]) - mean(y[(i == 1) & (d == 0)])

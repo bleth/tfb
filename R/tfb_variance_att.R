@@ -8,6 +8,7 @@
 #' @param d treatment vector
 #' @param wdim final tfb estimate
 #' @param y response vector
+#' @param estimand estimand being estimated
 #'
 #' @returns A double, the estimated variance of the WDIM-ATT within a fold.
 #'
@@ -27,7 +28,7 @@
 #' 9.48e-1,1.2,1.52,1.06,6.69e-1,1.39,1.13,6.63e-1,1.7,1.04,8.14e-1,1.64,
 #' 8.49e-1,7.09e-1,8.97e-1,9.19e-1,1.25,1.06,1.69,1.43,1.37)*1e-7)
 #' wdim <- -0.0315 # average wdim for iris data from tfb_estimate_fold
-#' tfb:::tfb_variance_att(yhat_c,e_c,i,w,d,wdim,y)
+#' tfb:::tfb_variance_att(yhat_c,e_c,i,w,d,wdim,y,"att")
 
 tfb_variance_att <- function(
 
@@ -37,11 +38,14 @@ tfb_variance_att <- function(
   w,
   d,
   wdim,
-  y
+  y,
+  estimand
 
 ){
 
-  v_hat <- (1 / (sum(d[i == 1])^2)) * sum((y[(i == 1) & (d == 1)] - yhat_c[d[i == 1] == 1] - wdim)^2) + (1 / (sum(1 - d[i == 1])^2)) * sum((w[d[i == 1] == 0] * e_c)^2)
+  if (estimand == "atc") {sign <- -1} else {sign <- 1}
+
+  v_hat <- (1 / (sum(d[i])^2)) * sum((sign*(y[i & (d == 1)] - yhat_c[d[i] == 1]) - wdim)^2) + (1 / (sum(1 - d[i])^2)) * sum((w[d[i] == 0] * e_c)^2)
 
   return(v_hat)
 

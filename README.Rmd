@@ -13,16 +13,20 @@ knitr::opts_chunk$set(
 )
 ```
 
+
+
 # tfb
 
 <!-- badges: start -->
 [![R-CMD-check](https://github.com/bleth/tfb/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/bleth/tfb/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
+Please contact Kenai Burton-Heckman (package author/creator) at kenaiburton@gmail.com or Leonard Wainstein (TFB author/creator, package contributor) at lwainstein@reed.edu with questions!
+
 
 ## Overview
 
-Targeted function balancing, or TFB, is a statistical method for causal inference. `tfb` is the official package for the implementation of TFB into the programming language R. TFB **Targets** a predictive **Function** and **Balances** observations to determine its final estimate. TFB thereby transforms the question of how best to weight observational study data into how best to model the relationships in that data.
+Targeted function balancing (https://arxiv.org/abs/2203.12179), or TFB, is a statistical method for causal inference. `tfb` is the official package for the implementation of TFB into the programming language R. TFB **Targets** a predictive **Function** and **Balances** observations to determine its final estimate. TFB thereby transforms the question of how best to weight observational study data into how best to model the relationships in that data.
 
 
 ## Installation
@@ -42,7 +46,7 @@ devtools::install_github("bleth/tfb")
 
 ### Causal Inference
 
-`tfb` can help answer the question of what the *average effect* of a binary variable is on an outcome. For example, we might want to know what the effect of taking AP Calculus in high school had on college students' GPA. Or we might want to know whether the placement of a product at eye level in a grocery store increases its sales; or any other number of questions common to the practitioner of statistics. This means that TFB answers questions of *inference*, not *prediction*. Frequently inference is the subject of experimental studies: say, medical researchers hire participants to determine the effectiveness of their new medicine, through a hypothesis test or otherwise. This methodology usually requires the *randomization* of treatment amongst the participants, and may be referred to as *independence*. But what happens when we aren't able to fully randomize the treatment? Must we always perform an experiment in order to make inference, or could we use data from an observational study? *Causal inference* attempts to find solutions to these problems, and TFB is a competitive method in the field.
+`tfb` can help answer the question of what the *average effect* of a binary variable is on an outcome. For example, we might want to know what the effect of taking AP Calculus in high school had on college students' GPA. Or we might want to know whether the placement of a product at eye level in a grocery store increases its sales; or any other number of questions common to the practice of statistics. This means that TFB answers questions of *inference*, not *prediction*. Frequently inference is the subject of experimental studies: say, medical researchers hire participants to determine the effectiveness of their new medicine, through a hypothesis test or otherwise. This methodology usually requires the *randomization* of treatment amongst the participants, and may be referred to as *independence*. But what happens when we aren't able to fully randomize the treatment? Must we always perform an experiment in order to make inference, or could we use data from an observational study? *Causal inference* attempts to find solutions to these problems, and TFB is a competitive method in the field.
 
 
 ### Requirements
@@ -53,7 +57,7 @@ To properly use `tfb`, you'll want a few things in your data:
 
 1. A matrix or data frame of covariates `X`. Covariates are also called variables or features. `X` is n by p in size and does not include the treatment.
 
-2. A dichotomous treatment vector `d`. This means `d` must take *exactly* two values. `d` is n by 1 in size.
+2. A dichotomous treatment vector `d`. This means `d` must take *exactly* two values: 0 or 1. `d` is n by 1 in size.
 
 3. A numeric outcome vector `y`. `y` is n by 1 in size.
 
@@ -61,7 +65,7 @@ To properly use `tfb`, you'll want a few things in your data:
 
 You will also need to specify:
 
-1. The type of initial `fit` to use, representing what you think a reasonable representation of the relationship between `y` and `X` is. Currently, `tfb` supports ordinary least squares (`"ols"`), kernel-regularized least squares (`"krls"`), and elastic net regularization (`"elasticnet"`).
+1. The type of initial `fit` to use, representing what you think a reasonable representation of the relationship between `y` and `X` is. Currently, `tfb` supports ordinary least squares (`"ols"`), kernel-regularized least squares (`"krls"`), and elastic net regularization (`"elasticnet"`). Kernel-regularized least squares is implemented by the `KRLS` package (https://cran.r-project.org/web/packages/KRLS/index.html), and elastic net regression is implemented by the `glmnet` package (https://cran.r-project.org/web/packages/glmnet/index.html).
 
 2. The estimand, representing what subset of the data you want to estimate the average treatment effect for. Currently, `tfb` supports estimation of the average treatment effect on the treated (`"att"`), the average treatment effect on the controlled (`"atc"`), and the average treatment effect (`"ate"`).
 
@@ -71,9 +75,10 @@ You will also need to specify:
 
 ### Data Exploration
 
-TFB includes 4 sample datasets for the user. They have been created via data generating process (DGP), the specifics of which are available at https://github.com/bleth/tfb/blob/main/data-raw/tfb_sampledat1.R. Looking at the first dataset:
+TFB includes 4 sample datasets for the user. They have been created via data generating process (DGP). For example, DGP 1 (detailed in https://github.com/bleth/tfb/blob/main/data-raw/tfb_sampledat1.R) was used to create the first dataset. We'll use the first dataset for our examples:
 
 ```{r}
+library(tfb)
 df <- tfb::tfb_sampledat1
 ```
 
@@ -85,7 +90,7 @@ d <- df[,3]
 y <- df[,4]
 ```
 
-In this DGP, While `d` affects `y`, `x1` and `x2` also affect both `d` and `y`. This means that the treatment effect of `d` is *confounded* by the covariates. Fortunately, we are able to observe all of the confounders in our data. We also know that `d` only takes two values, and that the treatment values are *stable* (our observations are independent and the treatment received is consistent between observations). In a practical application of `tfb`, the user should speculate on whether these assumptions hold, and exercise caution in reporting estimates when they do not hold.
+In this DGP, While `d` affects `y`, `x1` and `x2` also affect both `d` and `y`. This means that the treatment effect of `d` is *confounded* by the covariates. Fortunately, we are able to observe all of the confounders in our data. We also know that `d` only takes two values, that our observations are independent, and that the treatment received is consistent between observations. In a practical application of `tfb`, the user should speculate on whether these assumptions hold, and exercise caution in reporting estimates when they do not hold.
 
 From our DGP, we also know that the relationship between the outcome and the covariates is *linear*, meaning an initial `fit` of ordinary least squares is appropriate. In practice, the efficacy of `tfb` depends on how accurately the user can model this relationship. Empirically, we might choose a predictive model through cross-validation:
 
@@ -96,14 +101,8 @@ library(KRLS)
 set.seed(2062)
 
 
-# splitting training and testing set
-indices <- sample(1:nrow(df),200)
-train <- df[indices, ]
-test <- df[-indices, ]
-
-X <- train[,1:2]
-d <- train[,3]
-y <- train[,4]
+# make sure to reserve a testing set when 
+# performing exploratory analysis with real data!
 
 
 # linear cross-validated error
@@ -151,24 +150,22 @@ cve_krls <- function(X, y, folds) {
 
 
 # ols cves
-cve_ols <- c(
-  cve_ols(X, y, 5),
+cve_ols_results <- c(
   cve_ols(X[d == 0, ], y[d == 0], 5),
   cve_ols(X[d == 1, ], y[d == 1], 5)
 )
 
 
 # krls cves
-cve_control <- c(
-  cve_krls(X, y, 5),
+cve_krls_results <- c(
   cve_krls(X[d == 0, ], y[d == 0], 5),
   cve_krls(X[d == 1, ], y[d == 1], 5)
 )
 
 matrix(
-  c(cve_ols,cve_control), ncol=2,
+  c(cve_ols_results,cve_krls_results), ncol=2,
   dimnames = list(
-    c("Full","Control","Treatment"),
+    c("Control","Treatment"),
     c("OLS CVE", "KRLS CVE")
   )
 )
@@ -179,9 +176,8 @@ It seems like a simple linear model is a better choice here in terms of predicti
 
 ```{r}
 
-# retrieving correlation and p-values
+# retrieving adjusted R2
 adj_rsq <- c(
-  summary(lm(y ~ X))[9],
   summary(lm(y[d == 0] ~ X[d == 0, ]))[9],
   summary(lm(y[d == 1] ~ X[d == 1, ]))[9]
 )
@@ -189,7 +185,7 @@ adj_rsq <- c(
 matrix(
   adj_rsq, ncol = 1, 
   dimnames = list(
-    c("Full","Control","Treatment"),
+    c("Control","Treatment"),
     c("Adjusted R2")
   )
 )
@@ -217,18 +213,16 @@ mean((X[d == 0, 2] < x2_min) | (X[d == 0, 2] > x2_max))
 For the ATC, we weight the treatment group to fit the control group, so we ideally want the distribution of covariates in the control group to be a *subset* of the distribution of covariates in the treatment group. Disjoint or particularly disparate treatment and control groups can introduce bias, but fortunately that isn't a worry in this instance. With our preliminary analysis concluded, we will use the TFB-OLS estimator for the ATC:
 
 ```{r}
-
-X <- test[,1:2]
-d <- test[,3]
-y <- test[,4]
-
+# calling main tfb function
 out <- tfb(X, d, y, fit = "ols", estimand = "atc")
 
+# retrieving TFB's final estimate
 matrix(out$final$estimate, dimnames = list(NULL, "Final Estimate"))
 
 ```
 
-In this sample, our final estimate is pleasantly close to the true ATC of -1, because we have correctly specified our `fit`. In practice, we don't know the true treatment effect nor its empirical analog, but if TFB is applied with care, the method provides an estimator that is less naive than a difference in means (DIM).
+
+In this sample, our final estimate is pleasantly close to the true ATC of -1 because we have correctly specified our `fit`. In practice, we don't know the true treatment effect or its empirical analog. But if TFB is applied with care, this method provides an estimator that is less naive than a simple difference in means (DIM).
 
 
 ### Analysis
@@ -246,8 +240,8 @@ What else can `tfb` tell us? Its output is a nested list, where we can find summ
 # a confidence interval for the final estimate
 # out$final$confidence_interval
 
-# a p-value for the one-sided hypothesis test
-# that the final estimate is greater or less than zero
+# a p-value for the two-sided hypothesis test
+# that the final estimate is not equal to zero
 # out$final$p_value
 
 # the naive difference in means, for comparison
@@ -257,17 +251,18 @@ out$final
 
 ```
 
-From the summary statistics, we have our estimate and a measure of its variance. The confidence interval and p-value both suggest that the true ATC is less than zero. We can also see that the naive DIM is quite far off from our estimate, and quite far off from the true ATC given our knowledge of the DGP. The rest of the output is split up by sample. This includes summary statistics for within the split, which will be identical to those above in the case that only one sample is taken. However, the lower level summary also includes TFB's weights for that sample:
+From the summary statistics, we have our estimate and a measure of its variance. The confidence interval and p-value both suggest that the true ATC is less than zero. We can also see that the naive DIM is quite far off from our estimate, and quite far off from the true ATC given our knowledge of the DGP. The rest of the output is split up by sample. This includes summary statistics within the split, which will be identical to those above in the case that only one sample is taken. However, the lower level summary also includes TFB's weights for that sample:
 
 ```{r}
 
+# retrieving weights
 w <- out$sample_1$final$weights
 
 cbind(w, X, d, y)[1:10, ]
 
 ```
 
-TFB's estimator is a weighted difference in means (WDIM), so naturally the weights can be used to manually calculate its estimates. The weights may also be investigated for trends in covariate importance. Estimating the ATC with TFB involves weighting the treatment set, and we can similarly see that all the control units have the default weight of 1. The rest of the output within a sample is split up by fold.
+TFB's estimator is a weighted difference in means (WDIM), so naturally the weights can be used to manually calculate its estimates. The weights may also be investigated for trends in covariate importance. Estimating the ATC with TFB involves weighting the treatment set, and we can similarly see that all the control units have the default weight of 1. The rest of the output within a sample is split up by fold, required for cross-fitting.
 
 ```{r}
 
@@ -297,4 +292,6 @@ out$sample_1$estimates
 
 ```
 
-This can be used for detail work involving the predictive models fit as a part of TFB. For example, we can see the coefficients of the linear model fit on the treatment group in each fold, and the WDIMs within each fold, which are averaged to determine the final estimate within the sample.
+This can be used for detailed work involving the predictive models fit as a part of TFB. For example, we can see the coefficients of the linear model fit on the treatment group in each fold, and the WDIMs within each fold, which are averaged to determine the final estimate within the sample.
+
+Thank you for reading to the end! I hope you like the package :)

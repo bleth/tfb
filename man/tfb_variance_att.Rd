@@ -4,7 +4,7 @@
 \alias{tfb_variance_att}
 \title{Generalized WDIM Variance for the ATT}
 \usage{
-tfb_variance_att(yhat_c, e_c, i, w, d, wdim, y)
+tfb_variance_att(yhat_c, e_c, i, w, d, wdim, y, estimand)
 }
 \arguments{
 \item{yhat_c}{predicted values produced by f_0}
@@ -20,6 +20,8 @@ tfb_variance_att(yhat_c, e_c, i, w, d, wdim, y)
 \item{wdim}{final tfb estimate}
 
 \item{y}{response vector}
+
+\item{estimand}{estimand being estimated}
 }
 \value{
 A double, the estimated variance of the WDIM-ATT within a fold.
@@ -42,6 +44,6 @@ w <- c(rep(1,32),c(1.79,1.69,1.92e8,2.05e2,1.57,1.13e2,2.25,1.76,1.46,
 9.48e-1,1.2,1.52,1.06,6.69e-1,1.39,1.13,6.63e-1,1.7,1.04,8.14e-1,1.64,
 8.49e-1,7.09e-1,8.97e-1,9.19e-1,1.25,1.06,1.69,1.43,1.37)*1e-7)
 wdim <- -0.0315 # average wdim for iris data from tfb_estimate_fold
-tfb:::tfb_variance_att(yhat_c,e_c,i,w,d,wdim,y)
+tfb:::tfb_variance_att(yhat_c,e_c,i,w,d,wdim,y,"att")
 }
 \keyword{tfb}

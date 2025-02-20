@@ -273,7 +273,7 @@ tfb <- function(
     for (fold in seq_len(folds)) {
       args <- unlist(lapply(c("yhat_","e_"),paste0,treatments))
       args <- c(paste0(c(args,"i_","w_"), fold),"d","wdim")
-      if (estimand_type == "att") {args <- c(args,"y")}
+      if (estimand_type == "att") {args <- c(args,"y","estimand")}
       out <- do.call(paste0("tfb_variance_", estimand_type), lapply(args,as.symbol))
       assign(paste0("v_hat_",fold),out)
     }
