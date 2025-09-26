@@ -29,6 +29,7 @@ tfb(
 \item \code{"ols"}: ordinary least squares ( \code{lm()} ) will be used.
 \item \code{"krls"}: kernel regularized least squares ( \code{krls()} ) will be used.
 \item \code{"elasticnet"}: an elastic net penalized regression ( \code{glmnet()} ) will be used.
+\item \code{"bart"}: a bayesian additive regression tree ( \code{gbart()} ) will be used.
 }
 
 \code{fit} should only include two values when estimating the ATE and the treatment and control potential outcomes are hypothesized to be produced by different families of functions on the covariates. A character or character vector. No default.}

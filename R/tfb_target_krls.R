@@ -86,7 +86,7 @@ tfb_target_krls <- function(
     fitted <- KRLS::predict.krls(model, cbind(treatment,X))$fit
   } else {
     bandwidth <- ncol(X)
-    model <- do.call(krlsfn, c(list(X = X[i_out & (d == treatment), ], y = y[i_out & (d == treatment)]),params))
+    model <- do.call(krlsfn, c(list(X = as.matrix(X[i_out & (d == treatment), ]), y = y[i_out & (d == treatment)]),params))
     beta <- model$coeffs * sd(y[i_out & (d == treatment)])
     fitted <- KRLS::predict.krls(model, X)$fit
   }
@@ -117,7 +117,7 @@ tfb_target_krls <- function(
     center <- attr(scale(X[i_out & (d == treatment), ]), which = "scaled:center")
     scale  <- attr(scale(X[i_out & (d == treatment), ]), which = "scaled:scale")
     X_sc <- scale(X, center, scale)
-    X_tf <- tfb_gram_matrix(X_sc[i_in, ], X_sc[i_out & (d == treatment), ], kernelfn)
+    X_tf <- tfb_gram_matrix(as.matrix(X_sc[i_in, ]), as.matrix(X_sc[i_out & (d == treatment), ]), kernelfn)
   }
 
   return(list(beta,V,e,sigma2,yhat,X_tf))

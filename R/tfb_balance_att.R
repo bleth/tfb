@@ -61,8 +61,8 @@ tfb_balance_att <- function(
                      # Define values we need
     n_c <- sum(d==0) # control sample size
     n_t <- sum(d==1) # treated sample size
-    X_c <- X[d==0, ] # control X
-    X_t <- X[d==1, ] # treated X
+    X_c <- as.matrix(X[d==0, ]) # control X
+    X_t <- as.matrix(X[d==1, ]) # treated X
     p <- ncol(X)     # number of covariates
 
     # Want minimization
@@ -90,20 +90,20 @@ tfb_balance_att <- function(
       ### Here we'll want       LB <= A.sum_to_n_c * theta <= UB
 
     A.balance1 <- cbind(
-      (1 / n_c) * t(X_c),        # for weights
-      diag(rep(1, p)),           # for v1
-      diag(rep(0, p)),           # for v2
-      matrix(0, nrow=p, ncol=4), # for t's
-      matrix(0, nrow=p, ncol=4)  # for u's
+      (1 / n_c) * t(X_c),                               # for weights
+      as.matrix(diag(rep(1, p+1))[1:p, 1:p]),           # for v1
+      as.matrix(diag(rep(0, p+1))[1:p, 1:p]),           # for v2
+      matrix(0, nrow=p, ncol=4),                        # for t's
+      matrix(0, nrow=p, ncol=4)                         # for u's
     )
     bc.balance1 <- matrix(colMeans(X_t), nrow=2, ncol=p, byrow=T)
 
     A.balance2 <- cbind(
-      (1 / n_c) * sqrtV %*% t(X_c), # for weights
-      diag(rep(0, p)),              # for v1
-      diag(rep(1, p)),              # for v2
-      matrix(0, nrow=p, ncol=4),    # for t's
-      matrix(0, nrow=p, ncol=4)     # for u's
+      (1 / n_c) * sqrtV %*% t(X_c),                        # for weights
+      as.matrix(diag(rep(0, p+1))[1:p, 1:p]),              # for v1
+      as.matrix(diag(rep(1, p+1))[1:p, 1:p]),              # for v2
+      matrix(0, nrow=p, ncol=4),                           # for t's
+      matrix(0, nrow=p, ncol=4)                            # for u's
     )
     bc.balance2 <- matrix(colMeans(X_t %*% sqrtV), nrow=2, ncol=p, byrow=T)
 

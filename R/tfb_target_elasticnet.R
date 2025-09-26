@@ -63,7 +63,7 @@ tfb_target_elasticnet <- function(
     beta <- model$glmnet.fit$beta[, model$index[1]][-1]
     fitted <- glmnet:::predict.cv.glmnet(model, cbind(d = treatment,X), s = model$lambda.min)
   } else {
-    model <- do.call(glmnet::cv.glmnet, c(list(x = X[i_out & (d == treatment), ], y = y[i_out & (d == treatment)]),params))
+    model <- do.call(glmnet::cv.glmnet, c(list(x = as.matrix(X[i_out & (d == treatment), ]), y = y[i_out & (d == treatment)]),params))
     beta <- model$glmnet.fit$beta[, model$index[1]]
     fitted <- glmnet:::predict.cv.glmnet(model, X, s = model$lambda.min)
   }
@@ -73,12 +73,12 @@ tfb_target_elasticnet <- function(
   e <- y[i_in & (d == treatment)] - fitted[i_in & (d == treatment)]
 
   V <- if (reg_d) {
-    tfb_bootstrapped_covariance(cbind(d,X)[i_out & (d == treatment), ], y[i_out & (d == treatment)], tfb_betafn_elasticnet, bstrap_reps, c(params,lambda = model$lambda.min))[-1,-1]
+    tfb_bootstrapped_covariance(cbind(d,X)[i_out, ], y[i_out], tfb_betafn_elasticnet, bstrap_reps, c(params,lambda = model$lambda.min))[-1,-1]
   } else {
-    tfb_bootstrapped_covariance(X[i_out & (d == treatment), ], y[i_out & (d == treatment)], tfb_betafn_elasticnet, bstrap_reps, c(params,lambda = model$lambda.min))
+    tfb_bootstrapped_covariance(as.matrix(X[i_out & (d == treatment), ]), y[i_out & (d == treatment)], tfb_betafn_elasticnet, bstrap_reps, c(params,lambda = model$lambda.min))
   }
 
-  X_tf <- X[i_in, ]
+  X_tf <- as.matrix(X[i_in, ])
 
   return(list(beta,V,e,sigma2,yhat,X_tf))
 

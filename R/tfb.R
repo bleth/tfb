@@ -8,6 +8,7 @@
 #' * `"ols"`: ordinary least squares ( `lm()` ) will be used.
 #' * `"krls"`: kernel regularized least squares ( `krls()` ) will be used.
 #' * `"elasticnet"`: an elastic net penalized regression ( `glmnet()` ) will be used.
+#' * `"bart"`: a bayesian additive regression tree ( `gbart()` ) will be used.
 #'
 #' `fit` should only include two values when estimating the ATE and the treatment and control potential outcomes are hypothesized to be produced by different families of functions on the covariates. A character or character vector. No default.
 #' @param estimand The causal inference estimand to be estimated via targeted function balancing. Can be set to one of the following:
@@ -119,9 +120,14 @@ tfb <- function(
   if (!(is.matrix(X) | is.data.frame(X))) {stop("`X` must be a matrix or data frame.\n")}
   if (sum(sapply(1:ncol(X), function(i) class(X[,i])) %in% c("factor", "character")) > 0) {
     message("Categorical covariates are being expanded to one or more binary covariates for their respective levels.\n")
-    x <- fastDummies::dummy_cols(X, remove_first_dummy = T)
+    X <- fastDummies::dummy_cols(X, remove_first_dummy = T, remove_selected_columns = T)
   }
   X <- as.matrix(X)
+  if (sum(apply(X, 2, var)==0)>0) {
+    message("Constant columns removed from X.\n")
+    to_remove <- which(apply(X, 2, var)==0)
+    X <- as.matrix(X[, -to_remove])
+  }
   if (nrow(X) < 1 | ncol(X) < 1) {stop("`X` must contain data.\n")}
   if (!is.vector(d) | !(is.numeric(d) | is.logical(d) | is.character(d))) {stop("`d` must be a numeric, logical, or character vector.\n")}
   if (length(unique(d)) < 2) {stop("`d` cannot be a degenerate random variable.\n")}
@@ -129,10 +135,15 @@ tfb <- function(
   if (is.character(d)) {d <- d == unique(d)[1]}
   if (length(d) != nrow(X)) {stop("`d` must be the same length as `X`.\n")}
   if (!is.vector(y) | !(is.numeric(y) | is.logical(y))) {stop("`y` must be a numeric or logical vector.\n")}
+  if (sum(is.na(lm(y ~ X)$coefficients[-1]))>0) {
+    message("Collinear columns removed from X.\n")
+    to_remove <- which(is.na(lm(y ~ X)$coefficients[-1]))
+    X <- as.matrix(X[, -to_remove])
+  }
   if (length(y) != nrow(X)) {stop("`y` must be the same length as `X`.\n")}
   if (!(estimand %in% c("att","atc","ate"))) {stop("`estimand` must be one of `\"att\",\"atc\",\"ate\".\n")}
   if (estimand == "atc") {d <- 1-d} # inverting treatment for atc
-  if (any(!(fit %in% c("ols","krls","elasticnet","bart")))) {stop("`fit` must be one of `\"ols\",\"krls\",\"elasticnet\"`.\n")}
+  if (any(!(fit %in% c("ols","krls","elasticnet","bart")))) {stop("`fit` must be one of `\"ols\",\"krls\",\"elasticnet\",\"bart\"`.\n")}
   if (length(fit) > 1 & estimand != "ate") {warning("Multiple fits is only intended for `estimand=\"ate\". Using only the first fit specified.\n")}
   if (length(fit) > 2 & estimand == "ate") {warning("`estimand=\"ate\" uses at most two different fits. Using only the first two fits specified.\n")}
   if (length(fit) == 1 & estimand == "ate") {fit <- rep(fit, 2)}
@@ -144,6 +155,9 @@ tfb <- function(
   if (!is.logical(bstrap_cov)) {stop("`bstrap_cov` must be a logical.\n")}
   if (all(fit %in% "elasticnet") & bstrap_cov == F) {
     if (quiet == F) {warning("Ignoring user input of `bstrap_cov = F`. The covariance must be bootstrapped when `fit = \"elasticnet\"`.\n")}
+  }
+  if (all(fit %in% "bart") & bstrap_cov == T) {
+    if (quiet == F) {warning("Ignoring user input of `bstrap_cov = T`. The covariance must be the covariance of posterior distribution when `fit = \"bart\"`.\n")}
   }
 
   # check extended argument quality
@@ -198,14 +212,14 @@ tfb <- function(
   }
 
   if (!exists("X_c")) {
-    X_c <- X
+    X_c <- as.matrix(X)
   } else {
     if (!is.numeric(X_c) | !is.matrix(X_c)) {stop("`X_c` must be a numeric matrix.\n")}
     if (nrow(X_c) != nrow(X)) {stop("`X_c` must have as many rows as `X`.\n")}
   }
 
   if (!exists("X_t")) {
-    X_t <- X
+    X_t <- as.matrix(X)
   } else {
     if (!is.numeric(X_t) | !is.matrix(X_t)) {stop("`X_t` must be a numeric matrix.\n")}
     if (nrow(X_t) != nrow(X)) {stop("`X_t` must have as many rows as `X`.\n")}

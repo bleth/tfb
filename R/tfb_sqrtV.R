@@ -55,9 +55,13 @@ tfb_sqrtV <- function(
   }
 
   evalues <- decomposition$values
-  evectors <- decomposition$vectors
-  sqrtV <- evectors %*% diag(sqrt(evalues)) %*% t(evectors)
-
+  evalues[evalues<0] <- 0
+  evectors <- as.matrix(decomposition$vectors)
+  if (length(evalues)>1) {
+    sqrtV <- evectors %*% diag(sqrt(evalues)) %*% t(evectors)
+  } else {
+    sqrtV <- evectors %*% matrix(sqrt(evalues)) %*% t(evectors)
+  }
   if (ev_approx & !quiet) {message(paste0(iteration, "estimated eigenvalues account for ", 100 * sum(evalues) / sum(diag(V)), " percent of the total variance."))}
 
   return(sqrtV)

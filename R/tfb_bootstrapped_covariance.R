@@ -38,9 +38,9 @@ tfb_bootstrapped_covariance <- function(
   for (i in 1:bstrap_reps) {
     boot <- sample(1:nrow(X), replace=T)
     if (init) {
-      betas <- rbind(betas,matrix(do.call(betafn,list(X=X[boot,],y=y[boot],params=params)),nrow = 1))
+      betas <- rbind(betas,matrix(do.call(betafn,list(X=as.matrix(X[boot,]),y=y[boot],params=params)),nrow = 1))
     } else {
-      betas <- matrix(do.call(betafn,list(X=X[boot,],y=y[boot],params=params)),nrow = 1)
+      betas <- matrix(do.call(betafn,list(X=as.matrix(X[boot,]),y=y[boot],params=params)),nrow = 1)
       init <- T
     }
   }

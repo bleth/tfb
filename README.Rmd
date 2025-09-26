@@ -65,7 +65,7 @@ To properly use `tfb`, you'll want a few things in your data:
 
 You will also need to specify:
 
-1. The type of initial `fit` to use, representing what you think a reasonable representation of the relationship between `y` and `X` is. Currently, `tfb` supports ordinary least squares (`"ols"`), kernel-regularized least squares (`"krls"`), and elastic net regularization (`"elasticnet"`). Kernel-regularized least squares is implemented by the `KRLS` package (https://cran.r-project.org/web/packages/KRLS/index.html), and elastic net regression is implemented by the `glmnet` package (https://cran.r-project.org/web/packages/glmnet/index.html).
+1. The type of initial `fit` to use, representing what you think a reasonable representation of the relationship between `y` and `X` is. Currently, `tfb` supports ordinary least squares (`"ols"`), kernel-regularized least squares (`"krls"`), elastic net regularization (`"elasticnet"`), and bayesian additive regression trees (`"bart"`). Kernel-regularized least squares is implemented by the `KRLS` package (https://cran.r-project.org/web/packages/KRLS/index.html), elastic net regression is implemented by the `glmnet` package (https://cran.r-project.org/web/packages/glmnet/index.html), and bayesian additive regression trees are implemented by the `BART` package (https://cran.r-project.org/web/packages/BART/index.html).
 
 2. The estimand, representing what subset of the data you want to estimate the average treatment effect for. Currently, `tfb` supports estimation of the average treatment effect on the treated (`"att"`), the average treatment effect on the controlled (`"atc"`), and the average treatment effect (`"ate"`).
 

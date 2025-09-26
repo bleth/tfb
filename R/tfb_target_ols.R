@@ -74,19 +74,19 @@ tfb_target_ols <- function(
 
   V <- if (bstrap_cov) {
     if (reg_d) {
-      tfb_bootstrapped_covariance(cbind(d,X)[i_out, ], y[i_out], tfb_betafn_ols, bstrap_reps, params)[-1,-1]
+      as.matrix(tfb_bootstrapped_covariance(cbind(d,X)[i_out, ], y[i_out], tfb_betafn_ols, bstrap_reps, params)[-1,-1])
     } else {
-      tfb_bootstrapped_covariance(X[i_out & (d == treatment), ], y[i_out & (d == treatment)], tfb_betafn_ols, bstrap_reps, params)
+      as.matrix(tfb_bootstrapped_covariance(X[i_out & (d == treatment), ], y[i_out & (d == treatment)], tfb_betafn_ols, bstrap_reps, params))
     }
   } else {
     if (reg_d) {
-      vcovHC(model)[-(1:2),-(1:2)]
+      as.matrix(vcovHC(model)[-(1:2),-(1:2)])
     } else {
-      vcovHC(model)[-1, -1]
+      as.matrix(vcovHC(model)[-1, -1])
     }
   }
 
-  X_tf <- X[i_in, ]
+  X_tf <- as.matrix(X[i_in, ])
 
   return(list(beta,V,e,sigma2,yhat,X_tf))
 

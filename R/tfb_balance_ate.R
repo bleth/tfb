@@ -119,7 +119,7 @@ tfb_balance_ate <- function(
   A.raw_c <- cbind(
     (1 / n_c) * t(X_c[d==0, ]),                         # w_c
     matrix(0, nrow = p_c, ncol = n_t),                  # w_t
-    diag(rep(1, p_c)),                                  # v_rawc
+    as.matrix(diag(rep(1, p_c+1))[1:p_c, 1:p_c]),       # v_rawc
     matrix(0, nrow = p_c, ncol = dim - n_c - n_t - p_c) # everything else
   )                                                     # raw imbalance: $V_{1c}=\frac{1}{n}\sum_{i=1}^nX_i-\frac{1}{n_c}\sum_{i=1}^{n_c}w_c^{(i)}X_i$
 
@@ -127,7 +127,7 @@ tfb_balance_ate <- function(
     matrix(0, nrow = p_t, ncol = n_c),                        # w_c
     (1 / n_t) * t(X_t[d==1, ]),                               # w_t
     matrix(0, nrow = p_t, ncol = p_c),                        # v_rawc
-    diag(rep(1, p_t)),                                        # v_rawt
+    as.matrix(diag(rep(1, p_t+1))[1:p_t, 1:p_t]),             # v_rawt
     matrix(0, nrow = p_t, ncol = dim - n_c - n_t - p_c - p_t) # everything else
   )                                                           # raw imbalance: $V_{1t}=\frac{1}{n}\sum_{i=1}^nX_i-\frac{1}{n_t}\sum_{i=1}^{n_t}w_t^{(i)}X_i$
 
@@ -137,9 +137,9 @@ tfb_balance_ate <- function(
   A.tf_c <- cbind(
     (1 / n_c) * sqrtV_c %*% t(X_c[d==0, ]),             # w_c
     matrix(0, nrow = p_c, ncol = n_t),                  # w_t
-    diag(rep(0, p_c)),                                  # v_rawc
+    as.matrix(diag(rep(0, p_c+1))[1:p_c, 1:p_c]),       # v_rawc
     matrix(0, nrow = p_c, ncol = p_t),                  # v_rawt
-    diag(rep(1, p_c)),                                  # v_tfc
+    as.matrix(diag(rep(1, p_c+1))[1:p_c, 1:p_c]),       # v_tfc
                                                         # everything else
     matrix(0, nrow = p_c, ncol = dim - n_c - n_t - 2 * p_c - p_t)
   )                                                     # transformed imbalance: $V_{2c}=\hat V_{\beta_0}^{\frac{1}{2}}left(\frac{1}{n}\sum_{i=1}^nX_i-\frac{1}{n_c}\sum_{i=1}^{n_c}w_c^{(i)}X_i\right)$
@@ -148,9 +148,9 @@ tfb_balance_ate <- function(
     matrix(0, nrow = p_t, ncol = n_c),               # w_c
     (1 / n_t) * sqrtV_t %*% t(X_t[d==1, ]),          # w_t
     matrix(0, nrow = p_t, ncol = p_c),               # v_rawc
-    diag(rep(0, p_t)),                               # v_rawt
+    as.matrix(diag(rep(0, p_t+1))[1:p_t, 1:p_t]),    # v_rawt
     matrix(0, nrow = p_t, ncol = p_c),               # v_tfc
-    diag(rep(1, p_t)),                               # v_tft
+    as.matrix(diag(rep(1, p_t+1))[1:p_t, 1:p_t]),    # v_tft
                                                      # everything else
     matrix(0, nrow=p_t, ncol= dim - n_c - n_t - 2 * p_c - 2 * p_t)
   )                                                  # transformed imbalance: $V_{2t}=\hat V_{\beta_1}^{\frac{1}{2}}left(\frac{1}{n}\sum_{i=1}^nX_i-\frac{1}{n_t}\sum_{i=1}^{n_c}w_c^{(i)}X_i\right)$
