@@ -13,7 +13,6 @@
 #' * `variance`: the final variance of the tfb estimate
 #' * `confidence_interval`: the confidence interval for the estimate
 #' * `p_value`: the two-sided p-value for the estimate
-#' * `dim`: the naive difference in means for the data
 #'
 #' @importFrom stats median qnorm pnorm
 #' @keywords tfb
@@ -55,8 +54,7 @@ tfb_summary <- function(
       estimate = wdim,
       variance = v_hat,
       confidence_interval = list(lower = ci_lower, upper = ci_upper),
-      p_value = p_val,
-      dim = dim
+      p_value = p_val
     )
   )
 

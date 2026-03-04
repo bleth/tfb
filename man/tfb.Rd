@@ -11,7 +11,7 @@ tfb(
   fit,
   estimand,
   quiet = T,
-  folds = 2,
+  folds = 1,
   samples = 1,
   bstrap_cov = F,
   ...
@@ -27,67 +27,77 @@ tfb(
 \item{fit}{The hypothesized functional form of the relationship between the outcome and the covariates. This decides what regression model will be fit on the data and targeted by the targeted function balancing. Can be set to one or two of the following:
 \itemize{
 \item \code{"ols"}: ordinary least squares ( \code{lm()} ) will be used.
-\item \code{"krls"}: kernel regularized least squares ( \code{krls()} ) will be used.
-\item \code{"elasticnet"}: an elastic net penalized regression ( \code{glmnet()} ) will be used.
-\item \code{"bart"}: a bayesian additive regression tree ( \code{gbart()} ) will be used.
-}
-
-\code{fit} should only include two values when estimating the ATE and the treatment and control potential outcomes are hypothesized to be produced by different families of functions on the covariates. A character or character vector. No default.}
+\item \code{"krls"}: kernel regularized least squares ( \code{krls()} from \href{https://cran.r-project.org/web/packages/KRLS/index.html}{\code{KRLS}}) will be used.
+\item \code{"elasticnet"}: an elastic net penalized regression ( \code{glmnet()} from \href{https://cran.r-project.org/web/packages/glmnet/index.html}{\code{glmnet}}) will be used.
+\item \code{"bart"}: a bayesian additive regression tree ( \code{gbart()} from \href{https://cran.r-project.org/web/packages/BART/index.html}{\code{BART}}) will be used.
+\item \code{"custom"}: a custom fit. Requires user to manually specify \code{beta_c} (or \code{fhat_c}) and \code{Vhat_c} for the control group, and/or \code{beta_t} (or \code{fhat_t}) and \code{Vhat_t} for the treated group. Does not allow sample-splitting (i.e., \code{folds=1} is required.)
+When estimating the ATT or the ATC, \code{fit} should only be one value. When estimating the ATE, \code{fit} may include two different values to allow for the control (first value) and treatment (second value) potential outcomes to be modeled by different families of functions on the covariates. If \code{fit} is only one value when estimating the ATE, then \code{tfb} will use the same family of functions to model the treatment and control potential outcomes. A character or character vector. No default.
+}}
 
 \item{estimand}{The causal inference estimand to be estimated via targeted function balancing. Can be set to one of the following:
 \itemize{
 \item \code{"att"}: the average treatment effect on the treated (ATT) will be estimated.
 \item \code{"atc"}: the average treatment effect on the controlled (ATC) will be estimated.
 \item \code{"ate"}: the average treatment effect (ATE) will be estimated.
-}
-
-A character. No default.}
+A character. No default.
+}}
 
 \item{quiet}{If set to \code{TRUE}, suppresses console output. A logical. Default is \code{TRUE}.}
 
-\item{folds}{The number of folds for cross-fitting. The data will be partitioned uniformly at random into this many folds. It is suggested to use at least two folds, as using only one makes cross-fitting impossible and may introduce bias. An integer. Default is \code{2}.}
+\item{folds}{The number of folds for sample-splitting, if desired. The data will be partitioned uniformly at random into this many folds. An integer. Default is \code{1}, which means no sample-splitting.}
 
-\item{samples}{The number of times to sample the data; the number of times the data is split into folds. An integer. Default is \code{1}.}
+\item{samples}{The number of times to sample the data; the number of times the data is split into folds. An integer. Default is \code{1}. Must be \code{1} if \code{folds=1}.}
 
-\item{bstrap_cov}{Whether to bootsrap the covariance. If \code{FALSE}, \code{tfb} will estimate the covariance matrix via closed formula where applicable. \code{bstrap_cov} is ignored when there is no closed form for the covariance matrix (elasticnet). Setting this to \code{TRUE} may significantly extend calculation times. A logical. Default is \code{FALSE}.}
+\item{bstrap_cov}{Whether to bootstrap the covariance. If \code{FALSE}, \code{tfb} will estimate the covariance matrix via closed formula where applicable. \code{bstrap_cov} is ignored when there is no closed form for the covariance matrix (e.g., \code{fit="elasticnet"}). Setting this to \code{TRUE} may significantly extend calculation times. A logical. Default is \code{FALSE}.}
 
 \item{...}{Additional named arguments. See \emph{Details} for more information.}
 }
 \value{
-A nested list:
-\itemize{
-\item \code{final}: Summary statistics and estimates for the dataset, including:
-\item \code{sample_i}: Summary statistics for the ith sample, including:
-}
-
-Containing generally:
+When sample-splitting is not employed (i.e., \code{folds=1}), the output is a nested list that contains:
 \itemize{
 \item \code{estimate}: The TFB estimate/weighted difference in means.
 \item \code{variance}: The variance of the estimate.
+\item \code{weights}: TFB's weights
 \item \code{confidence_interval}: The confidence interval for the estimate.
 \item \code{p_value}: The p-value for the estimate under the null hypothesis that there is no treatment effect.
-\item \code{dim}: The unweighted difference in means.
+\item \code{betas}: The covariate coefficients for the targeted function(s).
+\item \code{Xs}: The covariate matrices for the targeted function(s).
+\item \code{covariances}: The covariance matrices for the targeted function(s).
+\item \code{yhats}: The predicted values from the targeted function(s).
 }
 
-Containing by sample:
+When sample-splitting is employed (i.e., \code{folds>1}), the output is a nested list that contains:
 \itemize{
-\item \code{weights}: TFB's weights.
+\item \code{final}: A list of summary statistics and estimates for the dataset.
+\item \code{sample_i}: A list of summary statistics for the ith sample-split iteration.
 }
 
-Containing by fold:
+The \code{final} list contains:
+\itemize{
+\item \code{estimate}: The TFB estimate/weighted difference in means. This is the median of all of the estimates from each sample-split iteration.
+\item \code{variance}: The variance of the above \code{estimate}.
+\item \code{confidence_interval}: The confidence interval for the \code{estimate}.
+\item \code{p_value}: The p-value for the \code{estimate} under the null hypothesis that there is no treatment effect.
+}
+
+Each \code{sample_i} list contains:
+\itemize{
+\item \code{final}: A list of summary statistics and estimates for the sample-split iteration. The estimate here is the average of the estimates across the folds for the sample-split iteration.
+}
+
+as well various results for each fold within the sample-split:
 \itemize{
 \item \code{indices}: The fold indices.
-\item \code{betas}: The covariate coefficients for the targeted function.
-\item \code{covariances}: The covariance matrices for the targeted function.
-\item \code{errors}: The residuals within the fold.
-\item \code{standard_errors}: The variance estimates of error terms within the regression.
-\item \code{dims}: The unweighted differences in means.
-\item \code{estimates}: The TFB estimates/weighted differences in means.
-\item \code{variances}: The variances of the estimates.
+\item \code{betas}: The covariate coefficients for the targeted function(s).
+\item \code{Xs}: The covariate matrices for the targeted function(s).
+\item \code{covariances}: The covariance matrices for the targeted function(s).
+\item \code{yhats}: The predicted values from the targeted function(s).
+\item \code{estimates}: The TFB estimates/weighted differences in means(s).
+\item \code{variances}: The variances of the above \code{estimates}(s).
 }
 }
 \description{
-\code{tfb} performs Targeted Function Balancing, a weighting method for causal inference. \code{tfb} weights observations in your dataset by minimizing targeted function imbalance from an initial regression, and returns a causal estimate as well as summary statistics. \code{tfb} is intended for use with data from observational studies where inference about the effect of a treatment is desired even though the treatment assignment mechanism is unknown or dependent on the covariates.
+\code{tfb} performs Targeted Function Balancing (\href{https://arxiv.org/abs/2203.12179}{Wainstein and Bai, 2025}), a weighting method for causal inference. \code{tfb} weights observations in your dataset by minimizing targeted function imbalance from an initial regression, and returns a causal estimate as well as summary statistics. \code{tfb} is intended for use with data from observational studies where inference about the effect of a treatment is desired even though the treatment assignment mechanism is unknown or dependent on the covariates.
 }
 \details{
 The dynamic dots also allow for a number of additional, more technical parameters:
@@ -99,7 +109,10 @@ The dynamic dots also allow for a number of additional, more technical parameter
 \item \code{ev_n}: How many eigenpairs \code{RSpectra} should calculate. The user is recommended to analyze a complete sample eigenmatrix first, to look for a common breakpoint such that the calculated eigenvalues still account for most all of the total explained variance. If the number is too big with KRLS a full decomposition will be performed instead. An integer. The default is typically \code{5}.
 \item \code{kernelfn}: A way to specify the inner product kernel function alternative to the KRLS default (the gaussian kernel). \code{tfb} has to restandardize all of the KRLS kernel matrices in order for calculations to turn out correctly, but this requires the use of the correct inner product. In short, if the user passes KRLS an alternative \code{whichkernel} through the dynamic dots, they must also pass \code{tfb} an inner product matching the alternative kernel, taking two rows of the covariate matrix as input and returning a positive semidefinite similarity score as output. A function. The default is the gaussian kernel, which the user may wish to view as a template: \code{tfb:::tfb_kernelfn}.
 \item \code{reg_d}: Whether to incorporate the treatment vector into the covariates, allowing it to be used for prediction in the targeting stage of \code{tfb}. \eqn{\hat f_0} and \eqn{\hat f_1} are then respectively calculated by forcing \eqn{D} to be a constant term of zero for \eqn{\hat f_0} and one for \eqn{\hat f_1}. This also implies that \code{tfb} will train \eqn{\hat f_0} and \eqn{\hat f_1} on both treatment and control units. A logical. The default is \code{False}.
-\item \code{X_c},\code{X_t}: A way to modify training data for \eqn{\hat f_0} and \eqn{\hat f_1} \emph{separately} of the rest of the dataset. For example, you could fit an \eqn{\hat f_0 = \beta_0+\beta_1x_1+\beta_2x_2^2} by letting \code{X_c = cbind(X[, 1],X[, 2]^2)} while leaving \eqn{\hat f_1 = \beta_0 + \beta_1x_1+\beta_2x_2}. Numeric matrices. Default is \code{X}.
+\item \code{X_c}, \code{X_t}: A way to modify training data for \eqn{\hat f_0} and \eqn{\hat f_1} \emph{separately} of the rest of the dataset. For example, you could fit an \eqn{\hat f_0 = \beta_0+\beta_1x_1+\beta_2x_2^2} by letting \code{X_c = cbind(X[, 1],X[, 2]^2)} while leaving \eqn{\hat f_1 = \beta_0 + \beta_1x_1+\beta_2x_2}. Numeric matrices. Default is \code{X}.
+\item \code{beta_c}, \code{beta_t}: User-chosen \eqn{\hat \beta_0} and \eqn{\hat \beta_1} coefficient vectors for the control and treatment group, respectively. In this case, \eqn{\hat f_0 (X) = X_c \hat \beta_0} and \eqn{\hat f_1 (X) = X_t \hat \beta_1}. \code{beta_c}/\code{beta_t} (or \code{fhat_c}/\code{fhat_t}) must be specified for the control/treatment group, respectively, if the corresponding \code{fit = "custom"}. Can only be used if not sample splitting (i.e., \code{folds=1}). Numeric vectors. If the length of \code{beta_c}/\code{beta_t} is the same as the number of columns of \code{X_c}/\code{X_t} (after removing collinear and constant columns), then no intercept is assumed. If the length of \code{beta_c}/\code{beta_t} is the same as one plus the number of columns of \code{X_c}/\code{X_t} (after removing colliner and constant columns), then the first element of \code{beta_c}/\code{beta_t} is assumed to be the intercept. Default is \code{NULL}.
+\item \code{fhat_c}, \code{fhat_t}: User-chosen \eqn{\hat f_0} and \eqn{\hat f_1} predicted value vectors for the control and treatment group, respectively. If \code{beta_c}/\code{beta_t} is not specified, then \code{fhat_c}/\code{fhat_t} must be specified for the control/treatment group, respectively, if the corresponding \code{fit = "custom"}. Numeric vectors. Can only be used if not sample splitting (i.e., \code{folds=1}). Default is \code{NULL}.
+\item \code{Vhat_c}, \code{Vhat_t}: User-chosen variance matrices for \code{beta_c} and \code{beta_t} (or \code{fhat_c} and \code{fhat_t}), respectively. \code{Vhat_c}/\code{Vhat_t} must be specified for the control/treatment group, respectively, if the corresponding \code{fit = "custom"}. Numeric matrices. Can only be used if not sample splitting (i.e., \code{folds=1}). Default is \code{NULL}.
 }
 }
 \examples{
@@ -109,7 +122,7 @@ d <- iris[, 5] == "setosa"
 y <- iris[, 1]
 # estimating the effect of `Species == "setosa"` on `Sepal.Length`
 # given `Sepal.Width`, `Petal.Length`, and `Petal.Width`
-tfb(X, d, y, fit = "ols", estimand = "att")$final$estimate
+tfb(X, d, y, fit = "ols", estimand = "att")$estimate
 
 }
 \keyword{tfb}

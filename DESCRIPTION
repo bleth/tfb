@@ -5,10 +5,10 @@ Authors@R:
     c(person("Kenai", "Burton-Heckman", , "kenaiburton@gmail.com", role = c("aut", "cre"),
            comment = c(ORCID = "0009-0008-6851-4223")),
       person("Leonard", "Wainstein", email = "lwainstein@reed.edu", role = "ctb"))
-Description: Targeted function balancing, or TFB, is a statistical method
+Description: Targeted Function Balancing (Wainstein and Bai, 2025), or TFB, is a statistical method
     for causal inference. tfb is the official package for the
-    implementation of TFB into the programming language R. TFB Targets a
-    predictive Function and Balances observations to determine its final
+    implementation of TFB into the programming language R. TFB targets a
+    predictive function and balances observations to determine its final
     estimate. TFB thereby transforms the question of how best to weight
     observational study data into how best to model the relationships in
     that data.

@@ -3,24 +3,20 @@
 
 # tfb
 
-<!-- badges: start -->
-
-[![R-CMD-check](https://github.com/bleth/tfb/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/bleth/tfb/actions/workflows/R-CMD-check.yaml)
-<!-- badges: end -->
-
 Please contact Kenai Burton-Heckman (package author/creator) at
 <kenaiburton@gmail.com> or Leonard Wainstein (TFB author/creator,
 package contributor) at <lwainstein@reed.edu> with questions!
 
 ## Overview
 
-Targeted function balancing (<https://arxiv.org/abs/2203.12179>), or
-TFB, is a statistical method for causal inference. `tfb` is the official
-package for the implementation of TFB into the programming language R.
-TFB **Targets** a predictive **Function** and **Balances** observations
-to determine its final estimate. TFB thereby transforms the question of
-how best to weight observational study data into how best to model the
-relationships in that data.
+Targeted Function Balancing ([Wainstein and Bai,
+2025](https://arxiv.org/abs/2203.12179)), or TFB, is a statistical
+method for causal inference. `tfb` is the official package for the
+implementation of TFB into the programming language R. TFB **targets** a
+predictive **function** and **balances** observations to determine its
+final estimate. TFB thereby transforms the question of how best to
+weight observational study data into how best to model the relationships
+in that data.
 
 ## Installation
 
@@ -33,10 +29,12 @@ devtools::install_github("bleth/tfb")
 ```
 
 **PLEASE NOTE!** Currently, `tfb` solves its optimization problem with
-`RMosek`, a package requiring additional installation steps. See
-<https://docs.mosek.com/latest/rmosek/install-interface.html> for a
-guide to installation. `RMosek` can be used for free with an educational
-license.
+[`RMosek`](https://cran.r-project.org/web/packages/Rmosek/index.html), a
+package requiring additional installation steps. See
+[here](https://docs.mosek.com/latest/rmosek/install-interface.html) for
+a guide to installation.
+[`RMosek`](https://cran.r-project.org/web/packages/Rmosek/index.html)
+can be used for free with an educational license.
 
 ## Use Case
 
@@ -52,11 +50,11 @@ means that TFB answers questions of *inference*, not *prediction*.
 Frequently inference is the subject of experimental studies: say,
 medical researchers hire participants to determine the effectiveness of
 their new medicine, through a hypothesis test or otherwise. This
-methodology usually requires the *randomization* of treatment amongst
-the participants, and may be referred to as *independence*. But what
-happens when we aren’t able to fully randomize the treatment? Must we
-always perform an experiment in order to make inference, or could we use
-data from an observational study? *Causal inference* attempts to find
+methodology usually requires the *randomization* of treatment among the
+participants, and may be referred to as *independence*. But what happens
+when we aren’t able to fully randomize the treatment? Must we always
+perform an experiment in order to make inference, or could we use data
+from an observational study? *Causal inference* attempts to find
 solutions to these problems, and TFB is a competitive method in the
 field.
 
@@ -64,19 +62,20 @@ field.
 
 For a detailed treatment of the assumptions and conditions of `tfb`’s
 best use case, please see the *Assumptions* and *Conditions* subsections
-of the Background section of my paper, which can be found here:
-<https://github.com/bleth/tfb/blob/main/papers/tfb_kbh.pdf>.
+of the Background section of Kenai Burton-Heckman’s thesis
+([Burton-Heckman,
+2023](https://github.com/bleth/tfb/blob/main/papers/Burton-Heckman%202023.pdf)).
 
 To properly use `tfb`, you’ll want a few things in your data:
 
 1.  A matrix or data frame of covariates `X`. Covariates are also called
-    variables or features. `X` is n by p in size and does not include
-    the treatment.
+    variables or features. `X` is $n$ by $p$ in size and does not
+    include the treatment.
 
 2.  A dichotomous treatment vector `d`. This means `d` must take
-    *exactly* two values: 0 or 1. `d` is n by 1 in size.
+    *exactly* two values: 0 or 1. `d` is $n$ by 1 in size.
 
-3.  A numeric outcome vector `y`. `y` is n by 1 in size.
+3.  A numeric outcome vector `y`. `y` is $n$ by 1 in size.
 
 `tfb` will try to estimate the effect of `d` on `y`, given `X`.
 
@@ -86,14 +85,20 @@ You will also need to specify:
     reasonable representation of the relationship between `y` and `X`
     is. Currently, `tfb` supports ordinary least squares (`"ols"`),
     kernel-regularized least squares (`"krls"`), elastic net
-    regularization (`"elasticnet"`), and bayesian additive regression
-    trees (`"bart"`). Kernel-regularized least squares is implemented by
-    the `KRLS` package
-    (<https://cran.r-project.org/web/packages/KRLS/index.html>), elastic
-    net regression is implemented by the `glmnet` package
-    (<https://cran.r-project.org/web/packages/glmnet/index.html>), and
-    bayesian additive regression trees are implemented by the `BART`
-    package (<https://cran.r-project.org/web/packages/BART/index.html>).
+    regularization (`"elasticnet"`), bayesian additive regression trees
+    (`"bart"`), and a custom/manually-specified fit (`"custom"`).
+    Kernel-regularized least squares is implemented by the
+    [`KRLS`](https://cran.r-project.org/web/packages/KRLS/index.html)
+    package, elastic net regression is implemented by the
+    [`glmnet`](https://cran.r-project.org/web/packages/glmnet/index.html)
+    package, and bayesian additive regression trees are implemented by
+    the
+    [`BART`](https://cran.r-project.org/web/packages/BART/index.html)
+    package. If using a custom fit, then one must manually specify the
+    coefficient vectors `beta_c` and/or `beta_t` (or the prediction
+    vectors `fhat_c` and/or `fhat_t`), and the associated variance
+    matrices `Vhat_c` and/or `Vhat_t` – see `help(tfb)` for more
+    information.
 
 2.  The estimand, representing what subset of the data you want to
     estimate the average treatment effect for. Currently, `tfb` supports
@@ -106,8 +111,8 @@ You will also need to specify:
 ### Data Exploration
 
 TFB includes 4 sample datasets for the user. They have been created via
-data generating process (DGP). For example, DGP 1 (detailed in
-<https://github.com/bleth/tfb/blob/main/data-raw/tfb_sampledat1.R>) was
+data generating process (DGP). For example, [DGP
+1](https://github.com/bleth/tfb/blob/main/data-raw/tfb_sampledat1.R) was
 used to create the first dataset. We’ll use the first dataset for our
 examples:
 
@@ -286,9 +291,9 @@ estimator for the ATC:
 out <- tfb(X, d, y, fit = "ols", estimand = "atc")
 
 # retrieving TFB's final estimate
-matrix(out$final$estimate, dimnames = list(NULL, "Final Estimate"))
+matrix(out$estimate, dimnames = list(NULL, "Final Estimate"))
 #>      Final Estimate
-#> [1,]     -0.9149297
+#> [1,]     -0.9137507
 ```
 
 In this sample, our final estimate is pleasantly close to the true ATC
@@ -301,83 +306,166 @@ naive than a simple difference in means (DIM).
 
 What else can `tfb` tell us? Its output is a nested list, where we can
 find summary statistics as well as raw information about the
-optimization.
+optimization. For example:
 
 ``` r
-
 # the final estimate
-# out$final$estimate
+out$estimate
+#> [1] -0.9137507
 
 # the variance of the final estimate
-# out$final$variance
+out$variance
+#> [1] 0.02996335
 
 # a confidence interval for the final estimate
-# out$final$confidence_interval
+out$confidence_interval
+#> $lower
+#> [1] -1.253019
+#> 
+#> $upper
+#> [1] -0.5744824
 
 # a p-value for the two-sided hypothesis test
 # that the final estimate is not equal to zero
-# out$final$p_value
-
-# the naive difference in means, for comparison
-# out$final$dim
-
-out$final
-#> $estimate
-#> [1] -0.9149297
-#> 
-#> $variance
-#> [1] 0.03073616
-#> 
-#> $confidence_interval
-#> $confidence_interval$lower
-#> [1] -1.258545
-#> 
-#> $confidence_interval$upper
-#> [1] -0.5713141
-#> 
-#> 
-#> $p_value
-#> [1] 1.801764e-07
-#> 
-#> $dim
-#> [1] 1.980084
+out$p_value
+#> [1] 1.300554e-07
 ```
 
-From the summary statistics, we have our estimate and a measure of its
-variance. The confidence interval and p-value both suggest that the true
-ATC is less than zero. We can also see that the naive DIM is quite far
-off from our estimate, and quite far off from the true ATC given our
-knowledge of the DGP. The rest of the output is split up by sample. This
-includes summary statistics within the split, which will be identical to
-those above in the case that only one sample is taken. However, the
-lower level summary also includes TFB’s weights for that sample:
+One can also pull out the weights from the output like so:
 
 ``` r
-
 # retrieving weights
-w <- out$sample_1$final$weights
+w <- out$weights
 
+# inspect the weights next to the data
 cbind(w, X, d, y)[1:10, ]
 #>                 w         x1          x2 d          y
 #>  [1,] 1.000000000 -0.3142317  0.23960407 0  0.2297696
-#>  [2,] 0.000306516  2.4033751 -0.18627112 1  6.5574659
-#>  [3,] 2.138405413 -0.7182640 -0.06589086 1 -1.9735341
+#>  [2,] 0.001194916  2.4033751 -0.18627112 1  6.5574659
+#>  [3,] 2.034251774 -0.7182640 -0.06589086 1 -1.9735341
 #>  [4,] 1.000000000 -1.7606110 -0.08700839 0 -2.4294093
 #>  [5,] 1.000000000 -1.1252812  0.37375539 0 -0.8127416
 #>  [6,] 1.000000000 -0.7195406  0.03183467 0 -3.8942611
-#>  [7,] 0.055169180  1.3102240  0.06165787 1  5.1013499
+#>  [7,] 0.062979375  1.3102240  0.06165787 1  5.1013499
 #>  [8,] 1.000000000  0.4518985  0.01315226 0  2.7178576
-#>  [9,] 0.935932569  0.1521774  0.20096113 1  2.4857978
-#> [10,] 0.882820455  0.6533708 -0.23710188 1  2.8999608
+#>  [9,] 0.986834952  0.1521774  0.20096113 1  2.4857978
+#> [10,] 0.922846418  0.6533708 -0.23710188 1  2.8999608
 ```
 
 TFB’s estimator is a weighted difference in means (WDIM), so naturally
-the weights can be used to manually calculate its estimates. The weights
-may also be investigated for trends in covariate importance. Estimating
-the ATC with TFB involves weighting the treatment set, and we can
-similarly see that all the control units have the default weight of 1.
-The rest of the output within a sample is split up by fold, required for
-cross-fitting.
+the weights can be used to manually calculate its estimates, if desired.
+The weights may also be investigated for trends in covariate importance.
+Estimating the ATC with TFB involves weighting the treatment set, so we
+can see that all the control units have the default weight of 1.
+
+We can also inspect the model used for TFB, by looking at its
+coefficients and predicted values:
+
+``` r
+# coefficients
+out$betas
+#> $beta_t
+#> [1] 3.944461 2.823169
+
+# predicted values
+yhat <- out$yhats$yhat_t
+
+# comparing predicted values with the data
+cbind(X, d, y, yhat)[1:10, ]
+#>               x1          x2 d          y       yhat
+#>  [1,] -0.3142317  0.23960407 0  0.2297696 -0.6519626
+#>  [2,]  2.4033751 -0.18627112 1  6.5574659  8.8652144
+#>  [3,] -0.7182640 -0.06589086 1 -1.9735341 -3.1081162
+#>  [4,] -1.7606110 -0.08700839 0 -2.4294093 -7.2792321
+#>  [5,] -1.1252812  0.37375539 0 -0.8127416 -3.4723840
+#>  [6,] -0.7195406  0.03183467 0 -3.8942611 -2.8372560
+#>  [7,]  1.3102240  0.06165787 1  5.1013499  5.2532677
+#>  [8,]  0.4518985  0.01315226 0  2.7178576  1.7306963
+#>  [9,]  0.1521774  0.20096113 1  2.4857978  1.0786745
+#> [10,]  0.6533708 -0.23710188 1  2.8999608  1.8188863
+```
+
+These outputs can be used for detailed work involving the predictive
+models fit as a part of TFB.
+
+### Sample Splitting
+
+TFB’s weights rely out outcome information. However, if desired, one can
+implement sample splitting to decorrelate each weight with its
+associated outcome. To implement sample splitting, one can increase the
+number of `folds` (by default, `folds=1`) like so:
+
+``` r
+# calling tfb function with sample-splitting
+out_ss <- tfb(X, d, y, fit = "ols", estimand = "atc", folds=2)
+
+# checking names of elements in the out_ss list
+names(out_ss)
+#> [1] "final"    "sample_1"
+```
+
+If sample splitting is used, then the output contains a `final` list,
+which holds the final estimate, variance, confidence interval, and
+p-value:
+
+``` r
+out_ss$final
+#> $estimate
+#> [1] -0.921759
+#> 
+#> $variance
+#> [1] 0.03034889
+#> 
+#> $confidence_interval
+#> $confidence_interval$lower
+#> [1] -1.263203
+#> 
+#> $confidence_interval$upper
+#> [1] -0.580315
+#> 
+#> 
+#> $p_value
+#> [1] 1.215825e-07
+```
+
+The results for each sample-split iteration are split across the
+`sample_i` lists. Here we only have one sample-split iteration. However,
+one can increase the number of sample-split iterations by increasing the
+`samples` argument (by default, `samples=1`). Each `sample_i` list
+contains summary statistics for the sample-split iteration, which will
+be identical to those above in this case because only one sample has
+been taken:
+
+``` r
+out_ss$sample_1$final$estimate
+#> [1] -0.921759
+```
+
+However, this lower level `sample_1` list also includes TFB’s weights
+for that sample-split iteration:
+
+``` r
+# retrieving weights
+w <- out_ss$sample_1$final$weights
+
+# inspect the weights next to the data
+cbind(w, X, d, y)[1:10, ]
+#>                  w         x1          x2 d          y
+#>  [1,] 1.0000000000 -0.3142317  0.23960407 0  0.2297696
+#>  [2,] 0.0001373987  2.4033751 -0.18627112 1  6.5574659
+#>  [3,] 2.1836886920 -0.7182640 -0.06589086 1 -1.9735341
+#>  [4,] 1.0000000000 -1.7606110 -0.08700839 0 -2.4294093
+#>  [5,] 1.0000000000 -1.1252812  0.37375539 0 -0.8127416
+#>  [6,] 1.0000000000 -0.7195406  0.03183467 0 -3.8942611
+#>  [7,] 0.1096714860  1.3102240  0.06165787 1  5.1013499
+#>  [8,] 1.0000000000  0.4518985  0.01315226 0  2.7178576
+#>  [9,] 1.0970704170  0.1521774  0.20096113 1  2.4857978
+#> [10,] 1.1005391470  0.6533708 -0.23710188 1  2.8999608
+```
+
+Again, because we are estimating the ATC here, we see that all the
+control units have the default weight of 1. The rest of the output
+within a sample-split iteration is broken out by sample-split fold:
 
 ``` r
 
@@ -385,41 +473,54 @@ cross-fitting.
 # out$sample_1$indices
 
 # model coefficients
-out$sample_1$betas
-#> $beta_c1
-#> [1] 3.986699 2.658262
+out_ss$sample_1$betas
+#> $beta_t1
+#> [1] 3.907353 2.926300
 #> 
-#> $beta_c2
-#> [1] 3.912987 3.072898
+#> $beta_t2
+#> [1] 3.973924 2.725665
 
 # model covariance matrices
 # out$sample_1$covariances
 
-# model residuals
-# out$sample_1$errors
+# model covariate matrices
+# out$sample_1$Xs
 
-# model standard error
-# out$sample_1$standard_errors
+# model predicted values
+# out$sample_1$yhats
 
-# fold dims
-# out$sample_1$dims
-
-# fold wdims
-out$sample_1$estimates
+# fold wdim estimates
+out_ss$sample_1$estimates
 #> $wdim_1
-#> [1] -0.7117805
+#> [1] -0.9273796
 #> 
 #> $wdim_2
-#> [1] -1.118079
+#> [1] -0.9161385
 
 # fold wdim variances
 # out$sample_1$variances
 ```
 
-This can be used for detailed work involving the predictive models fit
-as a part of TFB. For example, we can see the coefficients of the linear
-model fit on the treatment group in each fold, and the WDIMs within each
-fold, which are averaged to determine the final estimate within the
-sample.
+One can see that the WDIMs within each fold are averaged to determine
+the final estimate within the sample-split iteration:
+
+``` r
+# Final estimate
+out_ss$final$estimate
+#> [1] -0.921759
+
+# Average of estimates within each fold
+(out_ss$sample_1$estimates$wdim_1 + out_ss$sample_1$estimates$wdim_2) / 2
+#> [1] -0.921759
+```
 
 Thank you for reading to the end! I hope you like the package :)
+
+## References
+
+Burton-Heckman, K. (2023). `tfb`*: a Package for Targeted Function
+Balancing* \[Undergraduate thesis, Reed College\]. Reed College
+Electronic Theses. <https://rdc.reed.edu/c/etheses/home/>
+
+Wainstein, L. & Bai, H. (2025). Targeted Function Balancing. *arXiv
+preprint arXiv:2203.12179*.
