@@ -34,8 +34,6 @@ You can install the development version of `tfb` from [GitHub](https://github.co
 devtools::install_github("bleth/tfb")
 ```
 
-**PLEASE NOTE!** Currently, `tfb` solves its optimization problem with [`RMosek`](https://cran.r-project.org/web/packages/Rmosek/index.html), a package requiring additional installation steps. See [here](https://docs.mosek.com/latest/rmosek/install-interface.html) for a guide to installation. [`RMosek`](https://cran.r-project.org/web/packages/Rmosek/index.html) can be used for free with an educational license.
-
 
 ## Use Case
 

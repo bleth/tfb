@@ -14,6 +14,8 @@ tfb(
   folds = 1,
   samples = 1,
   bstrap_cov = F,
+  solver = "CLARABEL",
+  solver.rtol = 1e-06,
   ...
 )
 }
@@ -51,6 +53,15 @@ A character. No default.
 \item{bstrap_cov}{Whether to bootstrap the covariance. If \code{FALSE}, \code{tfb} will estimate the covariance matrix via closed formula where applicable. \code{bstrap_cov} is ignored when there is no closed form for the covariance matrix (e.g., \code{fit="elasticnet"}). Setting this to \code{TRUE} may significantly extend calculation times. A logical. Default is \code{FALSE}.}
 
 \item{...}{Additional named arguments. See \emph{Details} for more information.}
+
+\item{`solver`:}{Which solver to use to minimize objective function for TFB. Choices are:
+\itemize{
+\item \code{"CLARABEL"}: Uses the \href{https://clarabel.org/stable/}{Clarabel} solver, through the \href{https://cvxr.rbind.io/}{\code{CVXR}} package in \code{R}. Open source.
+\item \code{"MOSEK"}: Uses the \href{https://www.mosek.com/}{MOSEK} solver, through the \href{https://cran.r-project.org/web/packages/Rmosek/index.html}{\code{Rmosek}} package in \code{R}. See \href{https://docs.mosek.com/latest/rmosek/install-interface.html}{here} for a guide for installing \code{Rmosek}. This is a commercial solver that requires a \href{https://www.mosek.com/products/academic-licenses/}{license}.
+A character. Defaults to \verb{"CLARABEL}.
+}}
+
+\item{`solver_rtol`:}{Tolerance level for \code{solver}. Defaults to \code{1e-6}.}
 }
 \value{
 When sample-splitting is not employed (i.e., \code{folds=1}), the output is a nested list that contains:
@@ -105,8 +116,8 @@ The dynamic dots also allow for a number of additional, more technical parameter
 \item \code{bstrap_reps}: How many times to bootstrap the covariance matrix. This will have a significant effect on computation time, especially when targeting KRLS, as the reparametrization of X to its kernel matrix K greatly increases the number of covariates, provided n >> p. An integer. Default is \code{400.}
 \item \code{confidence}: The choice of confidence level for the reported confidence intervals. A double. Default is \code{0.95}.
 \item \code{chi_q}: The choice of quantile for the chi-squared distribution, which effectively controls the spread of the hypothesized distribution of \eqn{\hat\beta_d} about the true coefficient vector \eqn{\beta_d} in \eqn{\mathbb{R}^n}, supposing the CEF has been correctly specified. \code{chi_q} is used to specify the squidward constant. A double. Default is \code{0.95}.
-\item \code{ev_approx}: Whether to abbreviate calculation of covariance matrices using \code{RSpectra}, for when computation of the covariance matrix would be particularly taxing (large p). A logical. Default is \code{False.}
-\item \code{ev_n}: How many eigenpairs \code{RSpectra} should calculate. The user is recommended to analyze a complete sample eigenmatrix first, to look for a common breakpoint such that the calculated eigenvalues still account for most all of the total explained variance. If the number is too big with KRLS a full decomposition will be performed instead. An integer. The default is typically \code{5}.
+\item \code{ev_approx}: Whether to abbreviate calculation of covariance matrices using \href{https://cran.r-project.org/web/packages/RSpectra/index.html}{\code{RSpectra}}, for when computation of the covariance matrix would be particularly taxing (large p). A logical. Default is \code{False.}
+\item \code{ev_n}: How many eigenpairs \href{https://cran.r-project.org/web/packages/RSpectra/index.html}{\code{RSpectra}} should calculate. The user is recommended to analyze a complete sample eigenmatrix first, to look for a common breakpoint such that the calculated eigenvalues still account for most all of the total explained variance. If the number is too big with KRLS a full decomposition will be performed instead. An integer. The default is typically \code{5}.
 \item \code{kernelfn}: A way to specify the inner product kernel function alternative to the KRLS default (the gaussian kernel). \code{tfb} has to restandardize all of the KRLS kernel matrices in order for calculations to turn out correctly, but this requires the use of the correct inner product. In short, if the user passes KRLS an alternative \code{whichkernel} through the dynamic dots, they must also pass \code{tfb} an inner product matching the alternative kernel, taking two rows of the covariate matrix as input and returning a positive semidefinite similarity score as output. A function. The default is the gaussian kernel, which the user may wish to view as a template: \code{tfb:::tfb_kernelfn}.
 \item \code{reg_d}: Whether to incorporate the treatment vector into the covariates, allowing it to be used for prediction in the targeting stage of \code{tfb}. \eqn{\hat f_0} and \eqn{\hat f_1} are then respectively calculated by forcing \eqn{D} to be a constant term of zero for \eqn{\hat f_0} and one for \eqn{\hat f_1}. This also implies that \code{tfb} will train \eqn{\hat f_0} and \eqn{\hat f_1} on both treatment and control units. A logical. The default is \code{False}.
 \item \code{X_c}, \code{X_t}: A way to modify training data for \eqn{\hat f_0} and \eqn{\hat f_1} \emph{separately} of the rest of the dataset. For example, you could fit an \eqn{\hat f_0 = \beta_0+\beta_1x_1+\beta_2x_2^2} by letting \code{X_c = cbind(X[, 1],X[, 2]^2)} while leaving \eqn{\hat f_1 = \beta_0 + \beta_1x_1+\beta_2x_2}. Numeric matrices. Default is \code{X}.

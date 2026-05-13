@@ -20,6 +20,11 @@
 #' @param folds The number of folds for sample-splitting, if desired. The data will be partitioned uniformly at random into this many folds. An integer. Default is `1`, which means no sample-splitting.
 #' @param samples The number of times to sample the data; the number of times the data is split into folds. An integer. Default is `1`. Must be `1` if `folds=1`.
 #' @param bstrap_cov Whether to bootstrap the covariance. If `FALSE`, `tfb` will estimate the covariance matrix via closed formula where applicable. `bstrap_cov` is ignored when there is no closed form for the covariance matrix (e.g., `fit="elasticnet"`). Setting this to `TRUE` may significantly extend calculation times. A logical. Default is `FALSE`.
+#' @param `solver`: Which solver to use to minimize objective function for TFB. Choices are:
+#' * `"CLARABEL"`: Uses the [Clarabel](https://clarabel.org/stable/) solver, through the [`CVXR`](https://cvxr.rbind.io/) package in `R`. Open source.
+#' * `"MOSEK"`: Uses the [MOSEK](https://www.mosek.com/) solver, through the [`Rmosek`](https://cran.r-project.org/web/packages/Rmosek/index.html) package in `R`. See [here](https://docs.mosek.com/latest/rmosek/install-interface.html) for a guide for installing `Rmosek`. This is a commercial solver that requires a [license](https://www.mosek.com/products/academic-licenses/).
+#'  A character. Defaults to `"CLARABEL`.
+#' @param `solver_rtol`: Tolerance level for `solver`. Defaults to `1e-6`.
 #' @param ... Additional named arguments. See *Details* for more information.
 #'
 #' @returns
@@ -87,16 +92,18 @@
 #'
 
 tfb <- function(
-    X,              # covariate matrix
-    d,              # treatment vector
-    y,              # response vector
-    fit,            # c("ols", "krls", "elasticnet", "bart")
-    estimand,       # c("atc", "att", "ate")
-    quiet = T,      # suppress console output
-    folds = 1,      # number of folds for sample-splitting
-    samples = 1,    # number of times to sample and fit the data
-    bstrap_cov = F, # whether to bootsrap the covariance
-    ...             # additional named arguments
+    X,                    # covariate matrix
+    d,                    # treatment vector
+    y,                    # response vector
+    fit,                  # c("ols", "krls", "elasticnet", "bart")
+    estimand,             # c("atc", "att", "ate")
+    quiet = T,            # suppress console output
+    folds = 1,            # number of folds for sample-splitting
+    samples = 1,          # number of times to sample and fit the data
+    bstrap_cov = F,       # whether to bootsrap the covariance
+    solver = "CLARABEL",  # solver choice
+    solver.rtol = 1e-6,  # tolerance level for solver
+    ...                   # additional named arguments
 ){
 
   # additional tfb arguments
@@ -178,6 +185,14 @@ tfb <- function(
   if (all(fit %in% "bart") & bstrap_cov == T) {
     if (quiet == F) {warning("Ignoring user input of `bstrap_cov = T`. The covariance must be the covariance of posterior distribution when `fit = \"bart\"`.\n")}
   }
+  if (!(solver %in% c("MOSEK","CLARABEL"))) {stop("`solver` must be one of `\"MOSEK\",\"CLARABEL\".\n")}
+  if(
+    !is.numeric(solver.rtol)
+  ){stop("`solver.rtol` must be a single number.\n")}
+  if(
+    is.numeric(solver.rtol) & length(solver.rtol)>1
+  ){stop("`solver.rtol` must be a single number.\n")}
+  if(solver.rtol<=0 | solver.rtol >=1){stop("`solver.rtol` must be a number between 0 and 1.\n")}
 
   # check extended argument quality
   if (!exists("bstrap_reps", inherits = FALSE)) {
@@ -511,10 +526,18 @@ tfb <- function(
       }
 
       # optimization/weighting to minimize objective function
-      args <- unlist(lapply(c("X_","beta_","sqrtV_" ,"sigma2_"),paste0,treatments))
-      args <- c(paste0(c(args,"i_"),fold), "d", "chi_q", "quiet")
-      out <- do.call(paste0("tfb_balance_",estimand_type),lapply(args,as.symbol))
-      assign(paste0("w_",fold),out)
+      if(solver=="MOSEK"){
+        args <- unlist(lapply(c("X_","beta_","sqrtV_" ,"sigma2_"),paste0,treatments))
+        args <- c(paste0(c(args,"i_"),fold), "d", "chi_q", "quiet", "solver.rtol")
+        out <- do.call(paste0("tfb_balance_rmosek_",estimand_type),lapply(args,as.symbol))
+        assign(paste0("w_",fold),out)
+      }
+      if(solver=="CLARABEL"){
+        args <- unlist(lapply(c("X_","beta_","sqrtV_" ,"sigma2_"),paste0,treatments))
+        args <- c(paste0(c(args,"i_"),fold), "d", "chi_q", "quiet", "solver", "solver.rtol")
+        out <- do.call(paste0("tfb_balance_cvxr_",estimand_type),lapply(args,as.symbol))
+        assign(paste0("w_",fold),out)
+      }
 
       # calculating wdim and dim within the fold
       args <- c("i_","w_")

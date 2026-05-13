@@ -2,6 +2,7 @@
 
 export(tfb)
 import(BART)
+import(CVXR)
 import(KRLS)
 import(RSpectra)
 import(Rmosek)

@@ -1,6 +1,6 @@
-#' Targeted Function Balancing Optimization -- ATT
+#' Targeted Function Balancing Optimization with RMOSEK -- ATT
 #'
-#' This function solves the linear optimization problem presented by TFB, given information from an initial regression, with the ATT as the estimand.
+#' This function solves the linear optimization problem presented by TFB with MOSEK, given information from an initial regression, with the ATT as the estimand.
 #' @param X covariate matrix
 #' @param beta coefficient vector
 #' @param sqrtV square root of variance matrix
@@ -9,6 +9,7 @@
 #' @param d treatment status vector
 #' @param chi_q probability threshold
 #' @param quiet whether to suppress console output
+#' @param rtol tolerance level for MOSEK solver
 #'
 #' @returns A numeric vector of weights.
 #'
@@ -33,11 +34,11 @@
 #' )
 #' # standard error for iris data from tfb_target_ols
 #' sigma2 <- 0.12
-#' tfb:::tfb_balance_att(X,beta,sqrtV,sigma2,i,d,0.95,TRUE)
+#' tfb:::tfb_balance_rmosek_att(X,beta,sqrtV,sigma2,i,d,0.95,TRUE, 1e-16)
 
 
 ### Optimization Function
-tfb_balance_att <- function(
+tfb_balance_rmosek_att <- function(
 
     X,
     beta,
@@ -46,11 +47,11 @@ tfb_balance_att <- function(
     i,
     d,
     chi_q,
-    quiet
+    quiet,
+    rtol
 
   ){
 
-    rtol <- 1e-16
     if (quiet) {
       verb <- 0
     } else {

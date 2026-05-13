@@ -1,6 +1,6 @@
-#' Targeted Function Balancing Optimization -- ATE
+#' Targeted Function Balancing Optimization with CVXR -- ATE
 #'
-#' This function solves the linear optimization problem presented by TFB, given information from an initial regression, with the ATE as the estimand.
+#' This function solves the linear optimization problem presented by TFB with CVXR, given information from an initial regression, with the ATE as the estimand.
 #' @param X_c covariate matrix used to fit f_0
 #' @param X_t covariate matrix used to fit f_1
 #' @param beta_c coefficient vector for the initial regression on the control set
@@ -13,11 +13,12 @@
 #' @param d treatment status vector
 #' @param chi_q probability threshold
 #' @param quiet whether to suppress console output
+#' @param solver solver from CVXR
+#' @param rtol tolerance level for CVXR solver
 #'
 #' @returns A numeric vector of weights.
 #'
-#' @import Rmosek
-#' @import SparseM
+#' @import CVXR
 #' @importFrom stats qchisq
 #' @importFrom methods as
 #' @keywords tfb
@@ -44,13 +45,13 @@
 #' # standard error for iris data from tfb_target_ols
 #' sigma2_c <- 0.12
 #' sigma2_t <- 0.0616
-#' tfb:::tfb_balance_ate(
-#'   X,X,beta_c,beta_t,sqrtV_c,sqrtV_t,sigma2_c,sigma2_t,i,d,0.95,TRUE
+#' tfb:::tfb_balance_rmosek_ate(
+#'   X,X,beta_c,beta_t,sqrtV_c,sqrtV_t,sigma2_c,sigma2_t,i,d,0.95,TRUE, "CLARABEL", 1e-6
 #' )
 
 
 ### Optimization Function
-tfb_balance_ate <- function(
+tfb_balance_cvxr_ate <- function(
     X_c,
     X_t,
     beta_c,
@@ -62,15 +63,16 @@ tfb_balance_ate <- function(
     i,
     d,
     chi_q,
-    quiet
+    quiet,
+    solver,
+    rtol
 
 ){
 
-  rtol <- 1e-16
   if (quiet) {
-    verb <- 0
+    verb <- FALSE
   } else {
-    verb <- 10
+    verb <- TRUE
   }
   d <- d[i == 1]
 
@@ -80,40 +82,42 @@ tfb_balance_ate <- function(
   p_c <- ncol(X_c) # number of covariates in X_c
   p_t <- ncol(X_t) # number of covariates in X_t
 
-  P <- list(sense = "min") # Want minimization
+  # Define linear function
+  c_CVXR <- c(
+    rep(0, n_c),               # w_c
+    rep(0, n_t),               # w_t
+    rep(0, p_c),               # v_rawc
+    rep(0, p_t),               # v_rawt
+    rep(0, p_c),               # v_tfc
+    rep(0, p_t),               # v_tft
+    rep(0, 2),                 # t_1c
+    rep(0, 2),                 # t_1t
+    0,                         # t_2c
+    0,                         # t_2t
+    0,                         # t_3
+    c(1, 0),                   # u_1
+    c(sigma2_c / (n_c^2), 0),  # u_2c
+    c(sigma2_t / (n_t^2), 0),  # u_2t
+    rep(0, 2),                 # tilde u_2c
+    rep(0, 2)                  # tilde u_2t
+  )                            # final problem: $c^t\theta=u_1^{(1)}+\frac{\hat\sigma_c^2}{n_c^2}u_{2c}^{(1)}+\frac{\hat\sigma_t^2}{n_t^2}u_{2t}^{(1)}$
 
-  P$c <- c(                   # Define linear function c
-    rep(0, n_c),              # w_c
-    rep(0, n_t),              # w_t
-    rep(0, p_c),              # v_rawc
-    rep(0, p_t),              # v_rawt
-    rep(0, p_c),              # v_tfc
-    rep(0, p_t),              # v_tft
-    rep(0, 2),                # t_1c
-    rep(0, 2),                # t_1t
-    0,                        # t_2c
-    0,                        # t_2t
-    0,                        # t_3
-    c(1, 0),                  # u_1
-    c(sigma2_c / (n_c^2), 0), # u_2c
-    c(sigma2_t / (n_t^2), 0)  # u_2t
-  )                           # final problem: $c^t\theta=u_1^{(1)}+\frac{\hat\sigma_c^2}{n_c^2}u_{2c}^{(1)}+\frac{\hat\sigma_t^2}{n_t^2}u_{2t}^{(1)}$
+  # Make CVXR Variables
+  dim <- length(c_CVXR) # dimension of theta
+  parvec <- Variable(dim)
 
-  dim <- length(P$c) # dimension of theta
-
+  # Define Linear constraint matrices
   A.sum_to_n_c <- t(as.matrix(c( # Define Linear constraint matrices A
     rep(1, n_c),                 # w_c
     rep(0, dim - n_c)            # everything else
   )))                            # w_c sum to n_c: $\sum_{i=1}^{n_c}w_c^{(i)}=n_c$
+  bc.sum_to_n_c <- matrix(n_c, nrow=2) # $n_c\leq A_{n_c}\cdot\theta\leq n_c$
 
   A.sum_to_n_t <- t(as.matrix(c(
     rep(0, n_c),                 # w_c
     rep(1, n_t),                 # w_t
     rep(0, dim - n_c - n_t)      # everything else
   )))                            # w_t sum to n_t: $\sum_{i=1}^{n_t}w_t^{(i)}=n_t$
-
-                                       # bounds on the constraints
-  bc.sum_to_n_c <- matrix(n_c, nrow=2) # $n_c\leq A_{n_c}\cdot\theta\leq n_c$
   bc.sum_to_n_t <- matrix(n_t, nrow=2) # $n_t\leq A_{n_t}\cdot\theta\leq n_t$
 
   A.raw_c <- cbind(
@@ -122,6 +126,7 @@ tfb_balance_ate <- function(
     as.matrix(diag(rep(1, p_c+1))[1:p_c, 1:p_c]),       # v_rawc
     matrix(0, nrow = p_c, ncol = dim - n_c - n_t - p_c) # everything else
   )                                                     # raw imbalance: $V_{1c}=\frac{1}{n}\sum_{i=1}^nX_i-\frac{1}{n_c}\sum_{i=1}^{n_c}w_c^{(i)}X_i$
+  bc.raw_c <- matrix(colMeans(X_c), nrow=2, ncol=p_c, byrow=T) # $\frac{1}{n}\sum_{i=1}^nX_i\leq A_{\text{raw}_c}\cdot\theta\leq\frac{1}{n}\sum_{i=1}^nX_i$
 
   A.raw_t <- cbind(
     matrix(0, nrow = p_t, ncol = n_c),                        # w_c
@@ -130,8 +135,6 @@ tfb_balance_ate <- function(
     as.matrix(diag(rep(1, p_t+1))[1:p_t, 1:p_t]),             # v_rawt
     matrix(0, nrow = p_t, ncol = dim - n_c - n_t - p_c - p_t) # everything else
   )                                                           # raw imbalance: $V_{1t}=\frac{1}{n}\sum_{i=1}^nX_i-\frac{1}{n_t}\sum_{i=1}^{n_t}w_t^{(i)}X_i$
-
-  bc.raw_c <- matrix(colMeans(X_c), nrow=2, ncol=p_c, byrow=T) # $\frac{1}{n}\sum_{i=1}^nX_i\leq A_{\text{raw}_c}\cdot\theta\leq\frac{1}{n}\sum_{i=1}^nX_i$
   bc.raw_t <- matrix(colMeans(X_t), nrow=2, ncol=p_t, byrow=T) # $\frac{1}{n}\sum_{i=1}^nX_i\leq A_{\text{raw}_t}\cdot\theta\leq\frac{1}{n}\sum_{i=1}^nX_i$
 
   A.tf_c <- cbind(
@@ -143,6 +146,7 @@ tfb_balance_ate <- function(
                                                         # everything else
     matrix(0, nrow = p_c, ncol = dim - n_c - n_t - 2 * p_c - p_t)
   )                                                     # transformed imbalance: $V_{2c}=\hat V_{\beta_0}^{\frac{1}{2}}left(\frac{1}{n}\sum_{i=1}^nX_i-\frac{1}{n_c}\sum_{i=1}^{n_c}w_c^{(i)}X_i\right)$
+  bc.tf_c <- matrix(colMeans(X_c %*% sqrtV_c), nrow=2, ncol=p_c, byrow=T)
 
   A.tf_t <- cbind(
     matrix(0, nrow = p_t, ncol = n_c),               # w_c
@@ -154,8 +158,6 @@ tfb_balance_ate <- function(
                                                      # everything else
     matrix(0, nrow=p_t, ncol= dim - n_c - n_t - 2 * p_c - 2 * p_t)
   )                                                  # transformed imbalance: $V_{2t}=\hat V_{\beta_1}^{\frac{1}{2}}left(\frac{1}{n}\sum_{i=1}^nX_i-\frac{1}{n_t}\sum_{i=1}^{n_c}w_c^{(i)}X_i\right)$
-
-  bc.tf_c <- matrix(colMeans(X_c %*% sqrtV_c), nrow=2, ncol=p_c, byrow=T)
   bc.tf_t <- matrix(colMeans(X_t %*% sqrtV_t), nrow=2, ncol=p_t, byrow=T)
 
   A.mag_c <- c(
@@ -204,7 +206,6 @@ tfb_balance_ate <- function(
     rep(0, dim - n_c - n_t - 2 * p_c - 2 * p_t - 7)
   )                                     # bias: $t_3=(t_{1c}^{(1)}+t_{1c}^{(2)})+(t_{1t}^{(1)}+t_{1t}^{(2)})+\sqrt{Q_q\Chi_p^2}(t_{2c}+t_{2t})$
   A.bias <- t(as.matrix(A.bias))
-
   bc.bias <- matrix(0, nrow=2)
 
   A.u2s <- cbind(
@@ -224,12 +225,37 @@ tfb_balance_ate <- function(
     matrix(0, nrow=3, ncol=1),          # u_2c^(1)
     matrix(c(0, 1, 0), nrow=3, ncol=1), # u_2c^(2)
     matrix(0, nrow=3, ncol=1),          # u_2t^(1)
-    matrix(c(0, 0, 1), nrow=3, ncol=1)  # u_2t^(2)
+    matrix(c(0, 0, 1), nrow=3, ncol=1),  # u_2t^(2)
+    matrix(0, nrow=3, ncol=4)          # tilde u2s
   )                                     # u2s: $u_1^{(2)}=\frac{1}{2}$ $u_{2c}^{(2)}=\frac{1}{2}$ $u_{2t}^{(2)}=\frac{1}{2}$
-
   bc.u2s <- matrix(0.5, nrow=2, ncol=3)
 
-  A <- rbind(     # linear constraints
+  A.tildeu2s <- cbind(
+    matrix(0, nrow=4, ncol=n_c),        # w_c
+    matrix(0, nrow=4, ncol=n_t),        # w_t
+    matrix(0, nrow=4, ncol=p_c),        # v_1c
+    matrix(0, nrow=4, ncol=p_t),        # v_1t
+    matrix(0, nrow=4, ncol=p_c),        # v_2c
+    matrix(0, nrow=4, ncol=p_t),        # v_2t
+    matrix(0, nrow=4, ncol=2),          # t_1c
+    matrix(0, nrow=4, ncol=2),          # t_1t
+    matrix(0, nrow=4, ncol=1),          # t_2c
+    matrix(0, nrow=4, ncol=1),          # t_2t
+    matrix(0, nrow=4, ncol=1),          # t_3
+    matrix(0, nrow=4, ncol=1),          # u_1^(1)
+    matrix(0, nrow=4, ncol=1),          # u_1^(2)
+    matrix(c(1/sqrt(2), 1/sqrt(2), 0, 0), nrow=4, ncol=1),          # u_2c^(1)
+    matrix(c(-1/sqrt(2), 1/sqrt(2), 0, 0), nrow=4, ncol=1),         # u_2c^(2)
+    matrix(c(0, 0, 1/sqrt(2), 1/sqrt(2)), nrow=4, ncol=1),          # u_2t^(1)
+    matrix(c(0, 0, -1/sqrt(2), 1/sqrt(2)), nrow=4, ncol=1),         # u_2t^(2)
+    matrix(c(-1, 0, 0, 0), nrow=4, ncol=1),  # for tilde u_2c^(1) -- this is the minus one
+    matrix(c(0, -1, 0, 0), nrow=4, ncol=1),  # for tilde u_2c^(2) -- this is the plus one
+    matrix(c(0, 0, -1, 0), nrow=4, ncol=1),  # for tilde u_2t^(1) -- this is the minus one
+    matrix(c(0, 0, 0, -1), nrow=4, ncol=1)  # for tilde u_2t^(2) -- this is the plus one
+  )
+  bc.tildeu2s <- matrix(0, nrow=2, ncol=4)
+
+  A_CVXR <- rbind(     # linear constraints
     A.sum_to_n_c,
     A.sum_to_n_t,
     A.raw_c,
@@ -239,12 +265,11 @@ tfb_balance_ate <- function(
     A.mag_c,
     A.mag_t,
     A.bias,
-    A.u2s
+    A.u2s,
+    A.tildeu2s
   )
-  A <- SparseM::as.matrix.csr(A)
-  P$A <- as(A, "CsparseMatrix")
 
-  bc <- cbind(     # linear constraint bounds
+  bc_CVXR <- as.matrix(cbind(     # linear constraint bounds
     bc.sum_to_n_c,
     bc.sum_to_n_t,
     bc.raw_c,
@@ -254,10 +279,14 @@ tfb_balance_ate <- function(
     bc.mag_c,
     bc.mag_t,
     bc.bias,
-    bc.u2s
-  )
-  P$bc <- bc
+    bc.u2s,
+    bc.tildeu2s
+  )[1, ])
 
+  # Define CVXR equality constraints
+  equality_constraints_CVXR <- A_CVXR %*% parvec == bc_CVXR
+
+  # Define upper and lower bounds for parameters
   lower <- c(       # parameter lower bounds
     rep(0, n_c),    # w_c
     rep(0, n_t),    # w_t
@@ -272,9 +301,10 @@ tfb_balance_ate <- function(
     0,              # t_3
     rep(0, 2),      # u_1
     rep(0, 2),      # u_2c
-    rep(0, 2)       # u_2t
+    rep(0, 2),       # u_2t
+    c(-0.5 / sqrt(2), 0.5 / sqrt(2), -0.5 / sqrt(2), 0.5 / sqrt(2)) # tilde u2s
   )
-  lower <- t(as.matrix(lower))
+  lower_CVXR <- matrix(lower)
 
   upper <- c(      # parameter upper bounds
     rep(n_c, n_c), # w_c
@@ -290,60 +320,75 @@ tfb_balance_ate <- function(
     Inf,           # t_3
     rep(Inf, 2),   # u_1
     rep(Inf, 2),   # u_2c
-    rep(Inf, 2)    # u_2t
+    rep(Inf, 2),   # u_2t
+    rep(Inf, 4)    # tilde u2s --- (n_c+2p+5):(n_c+2p+10)
   )
-  upper <- t(as.matrix(upper))
+  upper_CVXR <- matrix(upper)
 
-  P$bx <- rbind( # parameter bounds
-    lower, upper
+  # Define bounds on parameters
+  lower_finite <- as.vector(!is.infinite(lower_CVXR))
+  lowerbound_constraints_CVXR <- diag(1*lower_finite)[lower_finite, ] %*% parvec >= matrix(lower_CVXR[lower_finite, ])
+
+  upper_finite <- as.vector(!is.infinite(upper_CVXR))
+  upperbound_constraints_CVXR <- diag(1*upper_finite)[upper_finite, ] %*% parvec <= matrix(upper_CVXR[upper_finite, ])
+
+  # Quadratic Cone constraint
+  isolate_v2c <- rep(0, dim)
+  isolate_v2c[(n_c + n_t + p_c + p_t + 1):(n_c + n_t + 2 * p_c + p_t)] <- 1
+  isolate_v2c <- diag(isolate_v2c)
+  find_t2c <- rep(0, dim)
+  find_t2c[n_c + n_t + 2 * p_c + 2 * p_t + 5] <- 1
+  quadcone1_constraints_CVXR <- p_norm(isolate_v2c %*% parvec, 2) <= t(find_t2c) %*% parvec
+
+  isolate_v2t <- rep(0, dim)
+  isolate_v2t[(n_c + n_t + 2 * p_c + p_t + 1):(n_c + n_t + 2 * p_c + 2 * p_t)] <- 1
+  isolate_v2t <- diag(isolate_v2t)
+  find_t2t <- rep(0, dim)
+  find_t2t[n_c + n_t + 2 * p_c + 2 * p_t + 6] <- 1
+  quadcone2_constraints_CVXR <- p_norm(isolate_v2t %*% parvec, 2) <= t(find_t2t) %*% parvec
+
+  # Rotated Cone constraint
+  isolate_t3 <- rep(0, dim)
+  isolate_t3[n_c + n_t + 2 * p_c + 2 * p_t + 7] <- 1
+  isolate_t3 <- diag(isolate_t3)
+  find_u11 <- rep(0, dim)
+  find_u11[n_c + n_t + 2 * p_c + 2 * p_t + 8] <- 1
+  rotquadcone1_constraints_CVXR <- sum_squares(isolate_t3 %*% parvec) <= t(find_u11) %*% parvec
+
+  isolate_w_tildeu2c1 <- rep(0, dim)
+  isolate_w_tildeu2c1[1:n_c] <- 1
+  isolate_w_tildeu2c1[dim-3] <- 1
+  isolate_w_tildeu2c1 <- diag(isolate_w_tildeu2c1)
+  find_tildeu2c2 <- rep(0, dim)
+  find_tildeu2c2[dim-2] <- 1
+  rotquadcone2_constraints_CVXR <- p_norm(isolate_w_tildeu2c1 %*% parvec, 2) <= t(find_tildeu2c2) %*% parvec # Note this is a rotated cone constraint that has been recoded as a quadratic cone constraint.
+
+  isolate_w_tildeu2t1 <- rep(0, dim)
+  isolate_w_tildeu2t1[(n_c + 1):(n_c + n_t)] <- 1
+  isolate_w_tildeu2t1[dim-1] <- 1
+  isolate_w_tildeu2t1 <- diag(isolate_w_tildeu2t1)
+  find_tildeu2t2 <- rep(0, dim)
+  find_tildeu2t2[dim] <- 1
+  rotquadcone3_constraints_CVXR <- p_norm(isolate_w_tildeu2t1 %*% parvec, 2) <= t(find_tildeu2t2) %*% parvec # Note this is a rotated cone constraint that has been recoded as a quadratic cone constraint.
+
+  # Get CVXR solution
+  prob <- Problem(
+    Minimize(t(c_CVXR) %*% parvec),
+    constraints = c(
+      equality_constraints_CVXR,
+      lowerbound_constraints_CVXR,
+      upperbound_constraints_CVXR,
+      quadcone1_constraints_CVXR,
+      quadcone2_constraints_CVXR,
+      rotquadcone1_constraints_CVXR,
+      rotquadcone2_constraints_CVXR,
+      rotquadcone3_constraints_CVXR
+    )
   )
+  result <- psolve(prob, verbose=verb, feastol=rtol, reltol=rtol, abstol=rtol, solver=solver)
 
-  P$cones <- matrix(list(), 2, 5)       # cone constraints
-  rownames(P$cones) <- c("type", "sub")
-
-  P$cones[1,1] <- "QUAD"
-  P$cones[2,1] <- list(c(
-    n_c + n_t + 2 * p_c + 2 * p_t + 5,                      # index of t_2c
-    (n_c + n_t + p_c + p_t + 1):(n_c + n_t + 2 * p_c + p_t) # indices of v_2c
-  ))                                                        # quadratic cone: $\lVert V_{2c}\rVert\leq t_{2c}$
-
-  P$cones[1,2] <- "QUAD"
-  P$cones[2,2] <- list(c(
-    n_c + n_t + 2 * p_c + 2 * p_t + 6,                              # index of t_2t
-    (n_c + n_t + 2 * p_c + p_t + 1):(n_c + n_t + 2 * p_c + 2 * p_t) # indices of v_2t
-  ))                                                                # quadratic cone: $\lVert V_{2t}\rVert\leq t_{2t}$
-
-  P$cones[1,3] <- "RQUAD"
-  P$cones[2,3] <- list(c(
-    n_c + n_t + 2 * p_c + 2 * p_t + 8, # index of u_1^{(1)}
-    n_c + n_t + 2 * p_c + 2 * p_t + 9, # index of u_1^{(2)}
-    n_c + n_t + 2 * p_c + 2 * p_t + 7  # index of t_3
-  ))                                   # rotated quadratic cone: $t_3^2\leq2u_1^{(1)}u_1^{(2)}$
-
-  P$cones[1,4] <- "RQUAD"
-  P$cones[2,4] <- list(c(
-    n_c + n_t + 2 * p_c + 2 * p_t + 10, # index of u_{2c}^{(1)}
-    n_c + n_t + 2 * p_c + 2 * p_t + 11, # index of u_{2c}^{(2)}
-    1:n_c                               # indices of w_c
-  ))                                    # rotated quadratic cone: $\sum_{i\colon D_i=0}w_c^{(i)}\leq2u_{2c}^{(1)}u_{2c}^{(2)}$
-
-  P$cones[1,5] <- "RQUAD"
-  P$cones[2,5] <- list(c(
-    n_c + n_t + 2 * p_c + 2 * p_t + 12, # index of u_{2t}^{(1)}
-    n_c + n_t + 2 * p_c + 2 * p_t + 13, # index of u_{2t}^{(2)}
-    (n_c + 1):(n_c + n_t)               # indices of w_t
-  ))                                    # rotated quadratic cone: $\sum_{i\colon D_i=1}w_t^{(i)}\leq2u_{2t}^{(1)}u_{2t}^{(2)}$
-
-  P$dparam <- list(                     # define tolerance level
-    MSK_DPAR_ANA_SOL_INFEAS_TOL = rtol,
-    MSK_DPAR_BASIS_REL_TOL_S = rtol
-  )
-
-  solution <- Rmosek::mosek(P, opts = list(verbose = verb)) # get solution
-
-  if (!quiet) {message(solution$sol$itr$solsta)}
-
-  parameters <- solution$sol$itr$xx # define parameters for the solution
+  # Pull out the parameter values
+  parameters <- value(parvec)
   w <- rep(0, n_c + n_t)
   w[d == 0] <- parameters[1:n_c]
   w[d == 1] <- parameters[(n_c+1):(n_c+n_t)]
