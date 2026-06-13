@@ -15,10 +15,12 @@
 #' @param quiet whether to suppress console output
 #' @param solver solver from CVXR
 #' @param rtol tolerance level for CVXR solver
+#' @param maxit maximum number of iterations for CVXR solver
 #'
 #' @returns A numeric vector of weights.
 #'
 #' @import CVXR
+#' @import ECOSolveR
 #' @importFrom stats qchisq
 #' @importFrom methods as
 #' @keywords tfb
@@ -45,8 +47,8 @@
 #' # standard error for iris data from tfb_target_ols
 #' sigma2_c <- 0.12
 #' sigma2_t <- 0.0616
-#' tfb:::tfb_balance_rmosek_ate(
-#'   X,X,beta_c,beta_t,sqrtV_c,sqrtV_t,sigma2_c,sigma2_t,i,d,0.95,TRUE, "CLARABEL", 1e-6
+#' tfb:::tfb_balance_cvxr_ate(
+#'   X,X,beta_c,beta_t,sqrtV_c,sqrtV_t,sigma2_c,sigma2_t,i,d,0.95,TRUE, "CLARABEL", 1e-6, 1e3
 #' )
 
 
@@ -65,7 +67,8 @@ tfb_balance_cvxr_ate <- function(
     chi_q,
     quiet,
     solver,
-    rtol
+    rtol,
+    maxit
 
 ){
 
@@ -385,7 +388,7 @@ tfb_balance_cvxr_ate <- function(
       rotquadcone3_constraints_CVXR
     )
   )
-  result <- psolve(prob, verbose=verb, feastol=rtol, reltol=rtol, abstol=rtol, solver=solver)
+  result <- psolve(prob, verbose=verb, feastol=rtol, reltol=rtol, abstol=rtol, solver=solver, num_iter=maxit)
 
   # Pull out the parameter values
   parameters <- value(parvec)

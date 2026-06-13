@@ -15,7 +15,8 @@ tfb(
   samples = 1,
   bstrap_cov = F,
   solver = "CLARABEL",
-  solver.rtol = 1e-06,
+  solver_rtol = 1e-06,
+  solver_maxit = NULL,
   ...
 )
 }
@@ -57,11 +58,15 @@ A character. No default.
 \item{`solver`:}{Which solver to use to minimize objective function for TFB. Choices are:
 \itemize{
 \item \code{"CLARABEL"}: Uses the \href{https://clarabel.org/stable/}{Clarabel} solver, through the \href{https://cvxr.rbind.io/}{\code{CVXR}} package in \code{R}. Open source.
+\item \code{"SCS"}: Uses the \href{https://github.com/cvxgrp/scs/}{Splitting Conic Solver} solver, through the \href{https://cvxr.rbind.io/}{\code{CVXR}} package in \code{R}. Open source.
+\item \code{"ECOS"}: Uses the \href{https://github.com/embotech/ecos}{Embedded Conic Solver} solver, through the \href{https://cvxr.rbind.io/}{\code{CVXR}} package in \code{R}. Open source. Also requires the \href{https://cran.r-project.org/web/packages/ECOSolveR/index.html}{\code{ECOSolveR}} package in \code{R}.
 \item \code{"MOSEK"}: Uses the \href{https://www.mosek.com/}{MOSEK} solver, through the \href{https://cran.r-project.org/web/packages/Rmosek/index.html}{\code{Rmosek}} package in \code{R}. See \href{https://docs.mosek.com/latest/rmosek/install-interface.html}{here} for a guide for installing \code{Rmosek}. This is a commercial solver that requires a \href{https://www.mosek.com/products/academic-licenses/}{license}.
 A character. Defaults to \verb{"CLARABEL}.
 }}
 
 \item{`solver_rtol`:}{Tolerance level for \code{solver}. Defaults to \code{1e-6}.}
+
+\item{`solver_maxit`:}{Maximum number of iterations for the \code{solver}. If \code{NULL}, then defaults to \code{1e3} for \code{"CLARABEL"} and \code{"ECOS"}, and \code{1e6} for \code{"SCS"}. Not used for \code{"MOSEK"}. Defaults to \code{NULL}.}
 }
 \value{
 When sample-splitting is not employed (i.e., \code{folds=1}), the output is a nested list that contains:

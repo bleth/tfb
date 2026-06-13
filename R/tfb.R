@@ -22,9 +22,12 @@
 #' @param bstrap_cov Whether to bootstrap the covariance. If `FALSE`, `tfb` will estimate the covariance matrix via closed formula where applicable. `bstrap_cov` is ignored when there is no closed form for the covariance matrix (e.g., `fit="elasticnet"`). Setting this to `TRUE` may significantly extend calculation times. A logical. Default is `FALSE`.
 #' @param `solver`: Which solver to use to minimize objective function for TFB. Choices are:
 #' * `"CLARABEL"`: Uses the [Clarabel](https://clarabel.org/stable/) solver, through the [`CVXR`](https://cvxr.rbind.io/) package in `R`. Open source.
+#' * `"SCS"`: Uses the [Splitting Conic Solver](https://github.com/cvxgrp/scs/) solver, through the [`CVXR`](https://cvxr.rbind.io/) package in `R`. Open source.
+#' * `"ECOS"`: Uses the [Embedded Conic Solver](https://github.com/embotech/ecos) solver, through the [`CVXR`](https://cvxr.rbind.io/) package in `R`. Open source. Also requires the [`ECOSolveR`](https://cran.r-project.org/web/packages/ECOSolveR/index.html) package in `R`.
 #' * `"MOSEK"`: Uses the [MOSEK](https://www.mosek.com/) solver, through the [`Rmosek`](https://cran.r-project.org/web/packages/Rmosek/index.html) package in `R`. See [here](https://docs.mosek.com/latest/rmosek/install-interface.html) for a guide for installing `Rmosek`. This is a commercial solver that requires a [license](https://www.mosek.com/products/academic-licenses/).
 #'  A character. Defaults to `"CLARABEL`.
 #' @param `solver_rtol`: Tolerance level for `solver`. Defaults to `1e-6`.
+#' @param `solver_maxit`: Maximum number of iterations for the `solver`. If `NULL`, then defaults to `1e3` for `"CLARABEL"` and `"ECOS"`, and `1e6` for `"SCS"`. Not used for `"MOSEK"`. Defaults to `NULL`.
 #' @param ... Additional named arguments. See *Details* for more information.
 #'
 #' @returns
@@ -92,18 +95,19 @@
 #'
 
 tfb <- function(
-    X,                    # covariate matrix
-    d,                    # treatment vector
-    y,                    # response vector
-    fit,                  # c("ols", "krls", "elasticnet", "bart")
-    estimand,             # c("atc", "att", "ate")
-    quiet = T,            # suppress console output
-    folds = 1,            # number of folds for sample-splitting
-    samples = 1,          # number of times to sample and fit the data
-    bstrap_cov = F,       # whether to bootsrap the covariance
-    solver = "CLARABEL",  # solver choice
-    solver.rtol = 1e-6,  # tolerance level for solver
-    ...                   # additional named arguments
+    X,                     # covariate matrix
+    d,                     # treatment vector
+    y,                     # response vector
+    fit,                   # c("ols", "krls", "elasticnet", "bart")
+    estimand,              # c("atc", "att", "ate")
+    quiet = T,             # suppress console output
+    folds = 1,             # number of folds for sample-splitting
+    samples = 1,           # number of times to sample and fit the data
+    bstrap_cov = F,        # whether to bootsrap the covariance
+    solver = "CLARABEL",   # solver choice
+    solver_rtol = 1e-6,    # tolerance level for solver
+    solver_maxit = NULL,   # maximum number of iterations for solver
+    ...                    # additional named arguments
 ){
 
   # additional tfb arguments
@@ -185,14 +189,31 @@ tfb <- function(
   if (all(fit %in% "bart") & bstrap_cov == T) {
     if (quiet == F) {warning("Ignoring user input of `bstrap_cov = T`. The covariance must be the covariance of posterior distribution when `fit = \"bart\"`.\n")}
   }
-  if (!(solver %in% c("MOSEK","CLARABEL"))) {stop("`solver` must be one of `\"MOSEK\",\"CLARABEL\".\n")}
+
+  if (!(solver %in% c("MOSEK","CLARABEL", "SCS", "ECOS"))) {stop("`solver` must be one of `\"MOSEK\",\"CLARABEL\",\"SCS\",\"ECOS\".\n")}
+
   if(
-    !is.numeric(solver.rtol)
-  ){stop("`solver.rtol` must be a single number.\n")}
+    !is.numeric(solver_rtol)
+  ){stop("`solver_rtol` must be a single number.\n")}
   if(
-    is.numeric(solver.rtol) & length(solver.rtol)>1
-  ){stop("`solver.rtol` must be a single number.\n")}
-  if(solver.rtol<=0 | solver.rtol >=1){stop("`solver.rtol` must be a number between 0 and 1.\n")}
+    is.numeric(solver_rtol) & length(solver_rtol)>1
+  ){stop("`solver_rtol` must be a single number.\n")}
+  if(solver_rtol<=0 | solver_rtol >=1){stop("`solver_rtol` must be a number between 0 and 1.\n")}
+
+  if(solver=="MOSEK" & !is.null(solver_maxit)){warning("`solver_maxit` is ignored when `solver='MOSEK'`.\n")}
+  if (solver %in% c("CLARABEL", "SCS", "ECOS")) {
+    if(solver %in% c("CLARABEL", "ECOS") & is.null(solver_maxit)) solver_maxit <- 1e3
+    if(solver %in% c("SCS") & is.null(solver_maxit)) solver_maxit <- 1e6
+    if(!is.null(solver_maxit)){
+      if(
+        !is.numeric(solver_maxit)
+      ){stop("`solver_maxit` must be a single number.\n")}
+      if(
+        is.numeric(solver_maxit) & length(solver_maxit)>1
+      ){stop("`solver_maxit` must be a single number.\n")}
+      if(solver_maxit<=0 | abs(solver_maxit - round(solver_maxit))>.Machine$double.eps){stop("`solver_maxit` must be a positive whole number.\n")}
+    }
+  }
 
   # check extended argument quality
   if (!exists("bstrap_reps", inherits = FALSE)) {
@@ -528,13 +549,13 @@ tfb <- function(
       # optimization/weighting to minimize objective function
       if(solver=="MOSEK"){
         args <- unlist(lapply(c("X_","beta_","sqrtV_" ,"sigma2_"),paste0,treatments))
-        args <- c(paste0(c(args,"i_"),fold), "d", "chi_q", "quiet", "solver.rtol")
+        args <- c(paste0(c(args,"i_"),fold), "d", "chi_q", "quiet", "solver_rtol")
         out <- do.call(paste0("tfb_balance_rmosek_",estimand_type),lapply(args,as.symbol))
         assign(paste0("w_",fold),out)
       }
-      if(solver=="CLARABEL"){
+      if(solver %in% c("CLARABEL", "SCS", "ECOS")){
         args <- unlist(lapply(c("X_","beta_","sqrtV_" ,"sigma2_"),paste0,treatments))
-        args <- c(paste0(c(args,"i_"),fold), "d", "chi_q", "quiet", "solver", "solver.rtol")
+        args <- c(paste0(c(args,"i_"),fold), "d", "chi_q", "quiet", "solver", "solver_rtol", "solver_maxit")
         out <- do.call(paste0("tfb_balance_cvxr_",estimand_type),lapply(args,as.symbol))
         assign(paste0("w_",fold),out)
       }

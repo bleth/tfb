@@ -47,6 +47,6 @@ sqrtV <- matrix(
 )
 # standard error for iris data from tfb_target_ols
 sigma2 <- 0.12
-tfb:::tfb_balance_rmosek_att(X,beta,sqrtV,sigma2,i,d,0.95,TRUE, 1e-16)
+tfb:::tfb_balance_rmosek_att(X,beta,sqrtV,sigma2,i,d,0.95,TRUE, 1e-6)
 }
 \keyword{tfb}

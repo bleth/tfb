@@ -23,6 +23,7 @@ Imports:
     methods,
     Rmosek,
     CVXR,
+    ECOSolveR,
     RSpectra,
     sandwich,
     SparseM,

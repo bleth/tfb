@@ -4,7 +4,19 @@
 \alias{tfb_balance_cvxr_att}
 \title{Targeted Function Balancing Optimization with CVXR -- ATT}
 \usage{
-tfb_balance_cvxr_att(X, beta, sqrtV, sigma2, i, d, chi_q, quiet, solver, rtol)
+tfb_balance_cvxr_att(
+  X,
+  beta,
+  sqrtV,
+  sigma2,
+  i,
+  d,
+  chi_q,
+  quiet,
+  solver,
+  rtol,
+  maxit
+)
 }
 \arguments{
 \item{X}{covariate matrix}
@@ -26,6 +38,8 @@ tfb_balance_cvxr_att(X, beta, sqrtV, sigma2, i, d, chi_q, quiet, solver, rtol)
 \item{solver}{solver from CVXR}
 
 \item{rtol}{tolerance level for CVXR solver}
+
+\item{maxit}{maximum number of iterations for CVXR solver}
 }
 \value{
 A numeric vector of weights.
@@ -49,6 +63,6 @@ sqrtV <- matrix(
 )
 # standard error for iris data from tfb_target_ols
 sigma2 <- 0.12
-tfb:::tfb_balance_cvxr_att(X,beta,sqrtV,sigma2,i,d,0.95,TRUE, "CLARABEL", 1e-6)
+tfb:::tfb_balance_cvxr_att(X,beta,sqrtV,sigma2,i,d,0.95,TRUE, "CLARABEL", 1e-6, 1e3)
 }
 \keyword{tfb}

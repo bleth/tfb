@@ -3,6 +3,7 @@
 export(tfb)
 import(BART)
 import(CVXR)
+import(ECOSolveR)
 import(KRLS)
 import(RSpectra)
 import(Rmosek)

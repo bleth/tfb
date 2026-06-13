@@ -46,7 +46,7 @@
 #' sigma2_c <- 0.12
 #' sigma2_t <- 0.0616
 #' tfb:::tfb_balance_rmosek_ate(
-#'   X,X,beta_c,beta_t,sqrtV_c,sqrtV_t,sigma2_c,sigma2_t,i,d,0.95,TRUE, 1e-16
+#'   X,X,beta_c,beta_t,sqrtV_c,sqrtV_t,sigma2_c,sigma2_t,i,d,0.95,TRUE, 1e-6
 #' )
 
 
@@ -337,7 +337,9 @@ tfb_balance_rmosek_ate <- function(
 
   P$dparam <- list(                     # define tolerance level
     MSK_DPAR_ANA_SOL_INFEAS_TOL = rtol,
-    MSK_DPAR_BASIS_REL_TOL_S = rtol
+    MSK_DPAR_BASIS_REL_TOL_S = rtol,
+    INTPNT_CO_TOL_REL_GAP = rtol,
+    INTPNT_TOL_REL_GAP = rtol
   )
 
   solution <- Rmosek::mosek(P, opts = list(verbose = verb)) # get solution

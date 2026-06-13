@@ -18,7 +18,8 @@ tfb_balance_cvxr_ate(
   chi_q,
   quiet,
   solver,
-  rtol
+  rtol,
+  maxit
 )
 }
 \arguments{
@@ -49,6 +50,8 @@ tfb_balance_cvxr_ate(
 \item{solver}{solver from CVXR}
 
 \item{rtol}{tolerance level for CVXR solver}
+
+\item{maxit}{maximum number of iterations for CVXR solver}
 }
 \value{
 A numeric vector of weights.
@@ -79,8 +82,8 @@ sqrtV_t <- matrix(
 # standard error for iris data from tfb_target_ols
 sigma2_c <- 0.12
 sigma2_t <- 0.0616
-tfb:::tfb_balance_rmosek_ate(
-  X,X,beta_c,beta_t,sqrtV_c,sqrtV_t,sigma2_c,sigma2_t,i,d,0.95,TRUE, "CLARABEL", 1e-6
+tfb:::tfb_balance_cvxr_ate(
+  X,X,beta_c,beta_t,sqrtV_c,sqrtV_t,sigma2_c,sigma2_t,i,d,0.95,TRUE, "CLARABEL", 1e-6, 1e3
 )
 }
 \keyword{tfb}

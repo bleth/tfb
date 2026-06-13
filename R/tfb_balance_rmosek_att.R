@@ -34,7 +34,7 @@
 #' )
 #' # standard error for iris data from tfb_target_ols
 #' sigma2 <- 0.12
-#' tfb:::tfb_balance_rmosek_att(X,beta,sqrtV,sigma2,i,d,0.95,TRUE, 1e-16)
+#' tfb:::tfb_balance_rmosek_att(X,beta,sqrtV,sigma2,i,d,0.95,TRUE, 1e-6)
 
 
 ### Optimization Function
@@ -211,7 +211,9 @@ tfb_balance_rmosek_att <- function(
     # define tolerance level
     P$dparam <- list(
       MSK_DPAR_ANA_SOL_INFEAS_TOL = rtol,
-      MSK_DPAR_BASIS_REL_TOL_S = rtol
+      MSK_DPAR_BASIS_REL_TOL_S = rtol,
+      INTPNT_CO_TOL_REL_GAP = rtol,
+      INTPNT_TOL_REL_GAP = rtol
     )
 
     # Get solution

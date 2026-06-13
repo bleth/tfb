@@ -77,7 +77,7 @@ sqrtV_t <- matrix(
 sigma2_c <- 0.12
 sigma2_t <- 0.0616
 tfb:::tfb_balance_rmosek_ate(
-  X,X,beta_c,beta_t,sqrtV_c,sqrtV_t,sigma2_c,sigma2_t,i,d,0.95,TRUE, 1e-16
+  X,X,beta_c,beta_t,sqrtV_c,sqrtV_t,sigma2_c,sigma2_t,i,d,0.95,TRUE, 1e-6
 )
 }
 \keyword{tfb}
